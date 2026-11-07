@@ -39,7 +39,7 @@ export default function SenpaiPage() {
     try {
       const r = await api<{ sourceCount: number; created: number; updated: number; report: string }>("/api/ingest", { method: "POST" });
       setIngestMessage(
-        r.sourceCount === 0 ? "新しい投稿・資料はありません" : `${r.sourceCount}件の投稿・資料から、カードを${r.created}枚作り、${r.updated}枚に統合しました`,
+        r.sourceCount === 0 ? "新しい投稿・資料はありません" : `${r.sourceCount}件の投稿・資料から、知識カードを${r.created}枚作り、${r.updated}枚に統合しました`,
       );
       await reload();
     } catch (e) {
@@ -63,10 +63,10 @@ export default function SenpaiPage() {
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4">
         <div>
           <h1 className="font-bold">先輩の画面</h1>
-          <p className="text-sm text-stone-500">ふだんのやりとりから、エージェントが知識を1つずつ「カード」にまとめます。先輩は ✅ を押すか、話して直すだけ。</p>
+          <p className="text-sm text-stone-500">ふだんのやりとりから、エージェントが知識を1つずつ「知識カード」にまとめます。先輩は ✅ を押すか、話して直すだけ。</p>
         </div>
         <div className="flex items-center gap-3">
-          {ingesting ? <Spinner label="Slack・Drive・Notion を読んでカードを作っています…" /> : ingestMessage && <span className="text-sm text-stone-600">{ingestMessage}</span>}
+          {ingesting ? <Spinner label="Slack・Drive・Notion を読んで知識カードを作っています…" /> : ingestMessage && <span className="text-sm text-stone-600">{ingestMessage}</span>}
           <button data-tour="ingest" onClick={ingest} disabled={ingesting} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
             新しいやりとりを取り込む
           </button>
@@ -86,7 +86,7 @@ export default function SenpaiPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
           <ul data-tour="card-list" className="space-y-2">
-            {list.length === 0 && <li className="text-sm text-stone-500">カードはありません</li>}
+            {list.length === 0 && <li className="text-sm text-stone-500">知識カードはありません</li>}
             {list.map((c) => (
               <li key={c.id}>
                 <button
@@ -103,7 +103,7 @@ export default function SenpaiPage() {
               </li>
             ))}
           </ul>
-          <div>{selectedId ? <CardPanel key={selectedId} cardId={selectedId} onChanged={reload} /> : <p className="text-sm text-stone-500">左のカードを選んでください</p>}</div>
+          <div>{selectedId ? <CardPanel key={selectedId} cardId={selectedId} onChanged={reload} /> : <p className="text-sm text-stone-500">左の知識カードを選んでください</p>}</div>
         </div>
       )}
     </div>
@@ -155,7 +155,7 @@ function CardPanel({ cardId, onChanged }: { cardId: string; onChanged: () => voi
   );
 
   useEffect(() => {
-    // 理由がわからないカードを開いたら、エージェントが先に理由を尋ねる
+    // 理由がわからない知識カードを開いたら、エージェントが先に理由を尋ねる
     load().then((d) => {
       if (d.card.status === "draft" && !d.card.why && d.messages.length === 0) send(null);
     });
@@ -280,12 +280,12 @@ function SenpaiQuestionItem({ q, onAnswered }: { q: SenpaiQuestion; onAnswered: 
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             rows={3}
-            placeholder="実務訓練の合間に、わかる範囲で一言。答えはカードになり、後輩にも届きます。"
+            placeholder="実務訓練の合間に、わかる範囲で一言。答えは知識カードになり、後輩にも届きます。"
             className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
           />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex items-center justify-end gap-3">
-            {sending && <Spinner label="カードにしています…" />}
+            {sending && <Spinner label="知識カードにしています…" />}
             <button disabled={sending || !answer.trim()} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
               答える
             </button>

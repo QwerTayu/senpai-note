@@ -27,36 +27,36 @@ const ORG = "学園祭の実行委員会 総務局（毎年9月下旬に代替�
 const CHAT_SYSTEM = `あなたは「1代上の先輩ノート」のエージェントです。${ORG}の知識カードを、前の代の先輩と一緒に確かめて直します。
 先輩は忙しいので、短く、1回に1つだけ聞いてください。
 
-- カードの理由（why）が「不明」なら、まず理由を先輩に尋ねる
-- 先輩の答えでカードを直すときは update_card を呼ぶ（このカードの id だけ）。先輩が言っていないことは書かない
+- 知識カードの理由（why）が「不明」なら、まず理由を先輩に尋ねる
+- 先輩の答えで知識カードを直すときは update_card を呼ぶ（この知識カードの id だけ）。先輩が言っていないことは書かない
 - 先輩が「これで正しい」「OK」などと確認したら confirm_card を呼ぶ
 - 直したら、何をどう直したかを一言で伝え、ほかに直すところがないか、確定してよいかを尋ねる`;
 
 const confirmCardTool = {
   name: "confirm_card",
-  description: "先輩が内容を確認したので、このカードを確認済み（confirmed）にする。",
+  description: "先輩が内容を確認したので、この知識カードを確認済み（confirmed）にする。",
   input_schema: { type: "object" as const, properties: {}, additionalProperties: false },
 };
 
 export async function chatOnCard(cardId: string, senpaiText: string | null): Promise<string> {
   const card = await getCard(cardId);
-  if (!card) throw new Error("カードがありません");
+  if (!card) throw new Error("知識カードがありません");
   if (senpaiText) await addCardMessage(cardId, "senpai", senpaiText);
 
   const [sources, history, allSources] = await Promise.all([getSourcesByIds(card.sourceIds), listCardMessages(cardId), listSources()]);
   const knownSourceIds = new Set(allSources.map((s) => s.id));
 
   const context = [
-    "## カード",
+    "## 知識カード",
     formatCard(card),
     "",
     "## 根拠の投稿・資料",
     sources.map(formatSource).join("\n\n") || "（なし）",
   ].join("\n");
 
-  // 会話の履歴を user / assistant に並べる。最初の user にカードと根拠を入れる
+  // 会話の履歴を user / assistant に並べる。最初の user に知識カードと根拠を入れる
   const messages: { role: "user" | "assistant"; content: string }[] = [];
-  const opener = history.length === 0 ? "このカードを確かめたいです。最初に聞きたいことを1つ聞いてください。" : "このカードを確かめています。";
+  const opener = history.length === 0 ? "この知識カードを確かめたいです。最初に聞きたいことを1つ聞いてください。" : "この知識カードを確かめています。";
   messages.push({ role: "user", content: `${context}\n\n${opener}` });
   for (const m of history) {
     const role = m.role === "senpai" ? "user" : "assistant";
@@ -70,7 +70,7 @@ export async function chatOnCard(cardId: string, senpaiText: string | null): Pro
     system: CHAT_SYSTEM,
     messages,
     tools: [
-      { name: "update_card", description: "このカードを直す。変える項目だけを渡す。", input_schema: updateCardInputSchema },
+      { name: "update_card", description: "この知識カードを直す。変える項目だけを渡す。", input_schema: updateCardInputSchema },
       confirmCardTool,
     ],
     handlers: {
@@ -90,20 +90,20 @@ export async function chatOnCard(cardId: string, senpaiText: string | null): Pro
 
 const ANSWER_SYSTEM = `あなたは「1代上の先輩ノート」のエージェントです。${ORG}の新しい代（後輩）の質問に、前の代が確認した知識カードだけを根拠に答えます。
 
-- カードで答えられるときは answer を呼ぶ。根拠にしたカードの id を必ず付ける。カードに書いていないことは足さない
-- カードで答えられない、または一部しか答えられないときは report_gap を呼び、前の代の先輩に聞く質問を短く1文で書く。
+- 知識カードで答えられるときは answer を呼ぶ。根拠にした知識カードの id を必ず付ける。知識カードに書いていないことは足さない
+- 知識カードで答えられない、または一部しか答えられないときは report_gap を呼び、前の代の先輩に聞く質問を短く1文で書く。
   すでに似た「先輩への質問」が open で出ていれば、その id を join_id に入れて合流させる
 - 一部だけ答えられるときは、answer で答えられる部分を答えたうえで report_gap も呼ぶ
 - 回答は「です・ます」で、短く。時期・締切・理由があれば書く`;
 
 const answerTool = {
   name: "answer",
-  description: "確認済みのカードを根拠に後輩の質問に答える。",
+  description: "確認済みの知識カードを根拠に後輩の質問に答える。",
   input_schema: {
     type: "object" as const,
     properties: {
       answer: { type: "string", description: "回答の本文" },
-      cited_card_ids: { type: "array", items: { type: "string" }, description: "根拠にしたカードの id（1件以上）" },
+      cited_card_ids: { type: "array", items: { type: "string" }, description: "根拠にした知識カードの id（1件以上）" },
     },
     required: ["answer", "cited_card_ids"],
     additionalProperties: false,
@@ -113,7 +113,7 @@ const answerTool = {
 
 const reportGapTool = {
   name: "report_gap",
-  description: "カードでは答えられないことを、前の代の先輩への質問にする。",
+  description: "知識カードでは答えられないことを、前の代の先輩への質問にする。",
   input_schema: {
     type: "object" as const,
     properties: {
@@ -143,13 +143,13 @@ export async function askQuestion(text: string): Promise<AskResult> {
   let cited: string[] = [];
   let senpaiQuestionId: string | null = null;
 
-  const cardsText = cards.length ? cards.map(formatCard).join("\n\n") : "（確認済みのカードはまだありません）";
+  const cardsText = cards.length ? cards.map(formatCard).join("\n\n") : "（確認済みの知識カードはまだありません）";
   const openText = openSenpaiQuestions.length
     ? openSenpaiQuestions.map((q) => `- id=${q.id}: ${q.text}`).join("\n")
     : "（ありません）";
 
   await runToolLoop({
-    // カードはすべて system に入れてキャッシュする（ベクトル検索は使わない）
+    // 知識カードはすべて system に入れてキャッシュする（ベクトル検索は使わない）
     system: [
       { type: "text", text: ANSWER_SYSTEM },
       { type: "text", text: `## 確認済みの知識カード\n${cardsText}`, cache_control: { type: "ephemeral" } },
@@ -160,7 +160,7 @@ export async function askQuestion(text: string): Promise<AskResult> {
       answer: async (input) => {
         const parsed = z.object({ answer: z.string(), cited_card_ids: z.array(z.string()) }).parse(input);
         const bad = parsed.cited_card_ids.filter((id) => !cardIds.has(id));
-        if (bad.length) throw new Error(`確認済みのカードではありません: ${bad.join(", ")}`);
+        if (bad.length) throw new Error(`確認済みの知識カードではありません: ${bad.join(", ")}`);
         answer = parsed.answer;
         cited = parsed.cited_card_ids;
         return JSON.stringify({ ok: true });

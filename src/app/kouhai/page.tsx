@@ -55,7 +55,7 @@ export default function KouhaiPage() {
       <section className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
         <div>
           <h1 className="font-bold">後輩の画面</h1>
-          <p className="text-sm text-stone-500">去年の先輩の知識（何を・いつ・なぜ）を1つずつまとめた「カード」から、元の投稿を示して答えます。記録にないことは、先輩への質問にまとめます。</p>
+          <p className="text-sm text-stone-500">去年の先輩の知識（何を・いつ・なぜ）を1つずつまとめた「知識カード」から、元の投稿を示して答えます。記録にないことは、先輩への質問にまとめます。</p>
         </div>
         <form
           onSubmit={(e) => {
@@ -82,7 +82,7 @@ export default function KouhaiPage() {
             </button>
           ))}
         </div>
-        {asking && <Spinner label="カードを探しています…" />}
+        {asking && <Spinner label="知識カードを探しています…" />}
         {error && <p className="text-sm text-red-600">{error}</p>}
       </section>
 
@@ -95,7 +95,7 @@ export default function KouhaiPage() {
 
       <section className="space-y-3">
         <button data-tour="cards" onClick={() => setShowCards((v) => !v)} className="text-sm font-medium text-stone-600 underline">
-          確認済みのカードを見る（{cards.length}枚）
+          確認済みの知識カードを見る（{cards.length}枚）
         </button>
         {showCards && (
           <div className="grid gap-3 md:grid-cols-2">
@@ -138,10 +138,10 @@ function QuestionItem({
           {senpai.questionIds.length > 1 && <div className="mt-1 text-xs text-amber-700">同じことを聞いた人がほかに{senpai.questionIds.length - 1}人います</div>}
         </div>
       )}
-      {q.status === "answered" && senpai?.status === "answered" && <div className="text-xs font-medium text-green-700">先輩が答えてくれました（カードにもなりました）</div>}
+      {q.status === "answered" && senpai?.status === "answered" && <div className="text-xs font-medium text-green-700">先輩が答えてくれました（知識カードにもなりました）</div>}
       {cited.length > 0 && (
         <details className="space-y-2">
-          <summary className="cursor-pointer text-sm font-medium text-stone-600">根拠のカード（{cited.length}枚）と元の投稿</summary>
+          <summary className="cursor-pointer text-sm font-medium text-stone-600">根拠の知識カード（{cited.length}枚）と元の投稿</summary>
           <div className="mt-2 space-y-3">
             {cited.map((c) => (
               <div key={c.id} className="space-y-2 rounded-lg border border-stone-200 bg-stone-50 p-3">

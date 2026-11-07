@@ -2,13 +2,13 @@ import { z } from "zod";
 import { createCard, getCard, updateCard } from "./db";
 import { CARD_KINDS, type Card, type Source } from "./types";
 
-// カードを作る・直すツールの定義。取り込み（Managed Agents のカスタムツール）と
+// 知識カードを作る・直すツールの定義。取り込み（Managed Agents のカスタムツール）と
 // 修正の会話（Messages API）で同じスキーマを使う。
 
 type ObjectSchema = { type: "object"; properties: Record<string, unknown>; required: string[]; additionalProperties: false };
 
 const cardFieldsSchema = {
-  title: { type: "string", description: "カードの見出し。何についてのカードかが一目でわかる短い文" },
+  title: { type: "string", description: "知識カードの見出し。何についての知識カードかが一目でわかる短い文" },
   kind: {
     type: "string",
     enum: [...CARD_KINDS],
@@ -32,7 +32,7 @@ export const createCardInputSchema: ObjectSchema = {
 export const updateCardInputSchema: ObjectSchema = {
   type: "object",
   properties: {
-    card_id: { type: "string", description: "直すカードの id" },
+    card_id: { type: "string", description: "直す知識カードの id" },
     ...cardFieldsSchema,
     add_source_ids: { type: "array", items: { type: "string" }, description: "根拠に足す投稿・資料の id" },
   },
@@ -61,7 +61,7 @@ const updateInput = z.object({
   add_source_ids: z.array(z.string()).optional(),
 });
 
-// 取り込みで使う。根拠の id は、渡した sources か既存のカードの根拠の中にあるものだけ認める
+// 取り込みで使う。根拠の id は、渡した sources か既存の知識カードの根拠の中にあるものだけ認める
 export async function handleCreateCard(raw: unknown, knownSourceIds: Set<string>): Promise<string> {
   const input = createInput.parse(raw);
   const unknown = input.source_ids.filter((id) => !knownSourceIds.has(id));
@@ -79,16 +79,16 @@ export async function handleCreateCard(raw: unknown, knownSourceIds: Set<string>
   return JSON.stringify({ ok: true, card_id: id });
 }
 
-// 取り込みで既存のカードに統合するときは、先輩に確かめ直してもらうため draft に戻す
+// 取り込みで既存の知識カードに統合するときは、先輩に確かめ直してもらうため draft に戻す
 export async function handleUpdateCard(
   raw: unknown,
   knownSourceIds: Set<string>,
   opts: { backToDraft: boolean; onlyCardId?: string },
 ): Promise<string> {
   const input = updateInput.parse(raw);
-  if (opts.onlyCardId && input.card_id !== opts.onlyCardId) throw new Error("この会話では、このカードしか直せません");
+  if (opts.onlyCardId && input.card_id !== opts.onlyCardId) throw new Error("この会話では、この知識カードしか直せません");
   const card = await getCard(input.card_id);
-  if (!card) throw new Error(`カードがありません: ${input.card_id}`);
+  if (!card) throw new Error(`知識カードがありません: ${input.card_id}`);
   const added = input.add_source_ids ?? [];
   const unknown = added.filter((id) => !knownSourceIds.has(id));
   if (unknown.length) throw new Error(`存在しない根拠の id: ${unknown.join(", ")}`);
