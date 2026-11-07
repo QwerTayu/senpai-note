@@ -108,7 +108,7 @@ export function PlanTab({
             本番 {formatYmd(gen.festivalDate, true)}
             {daysLeft >= 0 && <span className="ml-3 text-base font-normal text-ink-soft">まであと{daysLeft}日</span>}
           </h1>
-          <p className="max-w-[40em] text-sm text-ink-soft">前の代までが確かめた知識カードから作った計画です。日付やメモは、今年のやり方に合わせて直してください。</p>
+          <p className="hidden max-w-[40em] text-sm text-ink-soft sm:block">前の代までが確かめた知識カードから作った計画です。日付やメモは、今年のやり方に合わせて直してください。</p>
         </div>
         <div className="flex flex-col items-end gap-3">
           <div data-tour="dept-filter" role="group" aria-label="部門で絞り込む" className="flex overflow-hidden rounded-[4px] border border-rule bg-sheet text-sm">

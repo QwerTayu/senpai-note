@@ -80,7 +80,7 @@ export default function SenpaiPage() {
         <div className="space-y-1">
           <p className="text-sm text-pencil">{profile ? `${profile.generation}年度の代` : "前の代"}の先輩の画面</p>
           <h1 className="text-2xl font-bold leading-snug">確かめて、一言答えるだけ</h1>
-          <p className="max-w-[40em] text-sm text-ink-soft">
+          <p className="hidden max-w-[40em] text-sm text-ink-soft sm:block">
             ふだんのやりとりから、エージェントが知識を1つずつ「知識カード」にまとめます。正しければ確認済みにし、違えばエージェントと話して直します。現役の代の計画に付いた提案と、記録にない質問も、ここに届きます。
           </p>
         </div>
