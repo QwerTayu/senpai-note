@@ -11,12 +11,17 @@ interface Step {
   body: string;
 }
 
+// 最後の手順のあとに続ける画面
+const NEXT: Record<string, { href: string; label: string }> = {
+  "/kouhai": { href: "/senpai?tour=1", label: "先輩の画面へ →" },
+};
+
 const TOURS: Record<string, Step[]> = {
   "/senpai": [
     {
       target: "role-switch",
-      title: "ここで役を切り替えます",
-      body: "前の代の先輩（B4）と、新しい代の後輩を切り替えます。今は先輩の画面です。ログインはありません。",
+      title: "今度は先輩（前の代）の画面です",
+      body: "後輩が聞いた答えの元になるカードは、ここで作られ、先輩が確かめています。先輩（B4）は実務訓練で忙しいので、することは最小限です。",
     },
     {
       target: "ingest",
@@ -47,8 +52,8 @@ const TOURS: Record<string, Step[]> = {
   "/kouhai": [
     {
       target: "role-switch",
-      title: "ここで役を切り替えます",
-      body: "今は新しい代（後輩）の画面です。先輩の画面に切り替えると、カードの確認や先輩への質問への回答ができます。",
+      title: "senpai-note へようこそ",
+      body: "毎年メンバーが入れ替わる組織のための「1代上の先輩」ノートです。ここで役を切り替えます（ログインはありません）。まずは新しい代（後輩）の画面から見ていきます。",
     },
     {
       target: "ask",
@@ -68,7 +73,7 @@ const TOURS: Record<string, Step[]> = {
     {
       target: "cards",
       title: "カードを読む",
-      body: "確認済みのカードは、質問しなくても一覧で読めます。",
+      body: "確認済みのカードは、質問しなくても一覧で読めます。このカードがどうやってできるのかは、先輩の画面で見られます。",
     },
   ],
 };
@@ -119,7 +124,9 @@ export function Tour() {
     try {
       seen = localStorage.getItem(SEEN_KEY(pathname)) === "1";
     } catch {}
-    const timer = seen ? undefined : setTimeout(start, 1200);
+    const forced = new URLSearchParams(window.location.search).get("tour") === "1";
+    if (forced) window.history.replaceState(null, "", pathname);
+    const timer = seen && !forced ? undefined : setTimeout(start, 1200);
     window.addEventListener("senpai-note:start-tour", start);
     return () => {
       clearTimeout(timer);
@@ -160,6 +167,7 @@ export function Tour() {
   if (!steps || !step || !rect) return null;
 
   const isLast = index === steps.length - 1;
+  const next = NEXT[pathname];
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const width = Math.min(360, vw - 32);
@@ -204,10 +212,14 @@ export function Tour() {
               </button>
             )}
             <button
-              onClick={() => (isLast ? finish() : setIndex(index + 1))}
+              onClick={() => {
+                if (!isLast) return setIndex(index + 1);
+                finish();
+                if (next) window.location.href = next.href;
+              }}
               className="rounded-lg bg-stone-900 px-4 py-1.5 text-sm font-medium text-white"
             >
-              {isLast ? "はじめる" : "次へ"}
+              {isLast ? (next ? next.label : "はじめる") : "次へ"}
             </button>
           </div>
         </div>

@@ -3,8 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ROLES = [
-  { href: "/senpai", label: "先輩（前の代）" },
   { href: "/kouhai", label: "後輩（新しい代）" },
+  { href: "/senpai", label: "先輩（前の代）" },
 ];
 
 export function RoleSwitch() {
