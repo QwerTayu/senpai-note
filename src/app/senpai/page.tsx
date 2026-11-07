@@ -1,9 +1,12 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
-import { api, CardView, formatDate, SourceView, Spinner } from "@/components/ui";
-import type { Card, CardMessage, Question, SenpaiQuestion, Source } from "@/lib/types";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { api, CardView, formatDate, formatYmd, GenerationBadge, SourceView, Spinner } from "@/components/ui";
+import { useProfile } from "@/components/useProfile";
+import type { Advice, Card, CardMessage, PlanItem, Question, SenpaiQuestion, Source } from "@/lib/types";
 
-type Tab = "draft" | "confirmed" | "questions";
+type Tab = "draft" | "confirmed" | "suggestions" | "questions";
+
+type Suggestion = Advice & { planItem: PlanItem };
 
 interface CardDetail {
   card: Card;
@@ -13,20 +16,27 @@ interface CardDetail {
 }
 
 export default function SenpaiPage() {
+  const profile = useProfile();
   const [tab, setTab] = useState<Tab>("draft");
   const [cards, setCards] = useState<Card[]>([]);
   const [senpaiQuestions, setSenpaiQuestions] = useState<SenpaiQuestion[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestionGeneration, setSuggestionGeneration] = useState<number | null>(null);
+  const [onlyMine, setOnlyMine] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [ingesting, setIngesting] = useState(false);
   const [ingestMessage, setIngestMessage] = useState("");
 
   const reload = useCallback(async () => {
-    const [c, s] = await Promise.all([
+    const [c, s, a] = await Promise.all([
       api<{ cards: Card[] }>("/api/cards"),
       api<{ senpaiQuestions: SenpaiQuestion[] }>("/api/senpai-questions"),
+      api<{ generation: number; suggestions: Suggestion[] }>("/api/advice"),
     ]);
     setCards(c.cards);
     setSenpaiQuestions(s.senpaiQuestions);
+    setSuggestions(a.suggestions);
+    setSuggestionGeneration(a.generation);
   }, []);
 
   useEffect(() => {
@@ -49,21 +59,28 @@ export default function SenpaiPage() {
     }
   }
 
-  const drafts = cards.filter((c) => c.status === "draft");
-  const confirmed = cards.filter((c) => c.status === "confirmed");
+  // 自分の代の知識カードを最初に出す（ほかの代のものは「すべての代」で見える）
+  const visible = useMemo(
+    () => (onlyMine && profile ? cards.filter((c) => c.generation === profile.generation) : cards),
+    [cards, onlyMine, profile],
+  );
+  const drafts = visible.filter((c) => c.status === "draft");
+  const confirmed = visible.filter((c) => c.status === "confirmed");
   const openQuestions = senpaiQuestions.filter((q) => q.status === "open");
-  const list = tab === "draft" ? drafts : confirmed;
+  const list = useMemo(() => (tab === "draft" ? drafts : tab === "confirmed" ? confirmed : []), [tab, drafts, confirmed]);
 
   useEffect(() => {
-    if (tab !== "questions" && list.length > 0 && !list.some((c) => c.id === selectedId)) setSelectedId(list[0].id);
-  }, [tab, list, selectedId]);
+    if (list.length > 0 && !list.some((c) => c.id === selectedId)) setSelectedId(list[0].id);
+  }, [list, selectedId]);
 
   return (
     <div className="space-y-5">
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4">
         <div>
-          <h1 className="font-bold">先輩の画面</h1>
-          <p className="text-sm text-stone-500">ふだんのやりとりから、エージェントが知識を1つずつ「知識カード」にまとめます。先輩は ✅ を押すか、話して直すだけ。</p>
+          <h1 className="font-bold">先輩の画面{profile && `（${profile.generation}年度の代）`}</h1>
+          <p className="text-sm text-stone-500">
+            ふだんのやりとりから、エージェントが知識を1つずつ「知識カード」にまとめます。先輩は ✅ を押すか、話して直すだけ。現役の代の計画に付いた、エージェントの提案も確かめます。
+          </p>
         </div>
         <div className="flex items-center gap-3">
           {ingesting ? <Spinner label="Slack・Drive・Notion を読んで知識カードを作っています…" /> : ingestMessage && <span className="text-sm text-stone-600">{ingestMessage}</span>}
@@ -76,6 +93,9 @@ export default function SenpaiPage() {
       <div data-tour="tabs" className="flex gap-2 text-sm">
         <TabButton active={tab === "draft"} onClick={() => setTab("draft")} label="確認待ち" count={drafts.length} />
         <TabButton active={tab === "confirmed"} onClick={() => setTab("confirmed")} label="確認済み" count={confirmed.length} />
+        <span data-tour="suggestions-tab">
+          <TabButton active={tab === "suggestions"} onClick={() => setTab("suggestions")} label="エージェントの提案" count={suggestions.length} highlight />
+        </span>
         <span data-tour="questions-tab">
           <TabButton active={tab === "questions"} onClick={() => setTab("questions")} label="後輩からの質問" count={openQuestions.length} highlight />
         </span>
@@ -83,9 +103,22 @@ export default function SenpaiPage() {
 
       {tab === "questions" ? (
         <SenpaiQuestionList items={senpaiQuestions} onAnswered={reload} />
+      ) : tab === "suggestions" ? (
+        <SuggestionList items={suggestions} generation={suggestionGeneration} cards={cards} onChanged={reload} />
       ) : (
         <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
           <ul data-tour="card-list" className="space-y-2">
+            <li className="flex gap-1 text-xs">
+              <button
+                onClick={() => setOnlyMine(true)}
+                className={`rounded-full px-3 py-1 ${onlyMine ? "bg-stone-900 text-white" : "bg-white text-stone-600"}`}
+              >
+                自分の代{profile && `（${profile.generation}年度）`}
+              </button>
+              <button onClick={() => setOnlyMine(false)} className={`rounded-full px-3 py-1 ${!onlyMine ? "bg-stone-900 text-white" : "bg-white text-stone-600"}`}>
+                すべての代
+              </button>
+            </li>
             {list.length === 0 && <li className="text-sm text-stone-500">知識カードはありません</li>}
             {list.map((c) => (
               <li key={c.id}>
@@ -94,7 +127,8 @@ export default function SenpaiPage() {
                   className={`w-full rounded-lg border p-3 text-left transition ${selectedId === c.id ? "border-stone-900 bg-white" : "border-stone-200 bg-white hover:border-stone-400"}`}
                 >
                   <div className="text-sm font-medium leading-snug">{c.title}</div>
-                  <div className="mt-1 flex gap-2 text-xs text-stone-500">
+                  <div className="mt-1 flex flex-wrap gap-2 text-xs text-stone-500">
+                    {!onlyMine && <GenerationBadge generation={c.generation} />}
                     {c.when && <span>🗓 {c.when}</span>}
                     {!c.why && <span className="text-amber-700">理由が不明</span>}
                     {c.answerIds.length > 0 && <span>先輩の回答から</span>}
@@ -187,7 +221,8 @@ function CardPanel({ cardId, onChanged }: { cardId: string; onChanged: () => voi
           ))}
           {answers.map((a) => (
             <div key={a.id} className="rounded-lg border border-stone-200 p-3 text-sm">
-              <div className="mb-1 text-xs text-stone-500">先輩への質問への回答 {a.answeredAt && formatDate(a.answeredAt)}</div>
+              <div className="mb-1 text-xs text-stone-500">先輩への質問への回答 {a.answeredBy && `${a.answeredBy}・`}
+                {a.answeredAt && formatDate(a.answeredAt)}</div>
               <div className="font-medium">Q. {a.text}</div>
               <div className="whitespace-pre-wrap">A. {a.answer}</div>
             </div>
@@ -292,8 +327,75 @@ function SenpaiQuestionItem({ q, onAnswered }: { q: SenpaiQuestion; onAnswered: 
           </div>
         </form>
       ) : (
-        <div className="rounded-lg bg-stone-50 p-3 text-sm whitespace-pre-wrap">{q.answer}</div>
+        <div className="space-y-1 rounded-lg bg-stone-50 p-3 text-sm whitespace-pre-wrap">
+          {q.answeredBy && <div className="text-xs text-stone-500">{q.answeredBy}の回答</div>}
+          {q.answer}
+        </div>
       )}
+    </li>
+  );
+}
+
+function SuggestionList({ items, generation, cards, onChanged }: { items: Suggestion[]; generation: number | null; cards: Card[]; onChanged: () => void }) {
+  const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
+  if (items.length === 0) {
+    return (
+      <p className="text-sm text-stone-500">
+        確認待ちの提案はありません。現役の代（{generation}年度）が計画を作ると、エージェントの提案がここに届きます。
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-stone-500">
+        {generation}年度の代の計画に、エージェントが付けた提案です。あなたの経験から見て正しければ ✅ を押してください。後輩の画面で「先輩が確認した提案」になります。
+      </p>
+      <ul className="space-y-3">
+        {items.map((s) => (
+          <SuggestionItem key={s.id} s={s} cards={s.cardIds.map((id) => cardById.get(id)).filter((c): c is Card => !!c)} onChanged={onChanged} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function SuggestionItem({ s, cards, onChanged }: { s: Suggestion; cards: Card[]; onChanged: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function act(method: "POST" | "DELETE") {
+    setBusy(true);
+    setError("");
+    try {
+      await api(`/api/advice/${s.id}`, { method });
+      onChanged();
+    } catch (e) {
+      setError(String(e));
+      setBusy(false);
+    }
+  }
+  return (
+    <li className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+      <div className="text-xs text-stone-500">
+        計画の項目: {formatYmd(s.planItem.date)} {s.planItem.title}（{s.planItem.department}）
+      </div>
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+        <div className="text-xs font-bold text-amber-900">💡 エージェントの提案</div>
+        <p className="text-sm leading-relaxed">{s.text}</p>
+      </div>
+      {cards.length > 0 && (
+        <div className="text-xs text-stone-500">
+          根拠: {cards.map((c) => `「${c.title}」（${c.generation}年度）`).join(" ")}
+        </div>
+      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className="flex gap-2">
+        <button disabled={busy} onClick={() => act("POST")} className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-40">
+          ✅ この提案でよい
+        </button>
+        <button disabled={busy} onClick={() => act("DELETE")} className="rounded-lg border border-stone-300 px-4 py-2 text-sm text-stone-600 disabled:opacity-40">
+          却下する
+        </button>
+      </div>
     </li>
   );
 }
