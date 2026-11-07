@@ -62,4 +62,6 @@ npx tsx --env-file=.env.local scripts/seed.ts --reset
 
 API を curl で確かめるときは、`/api/login`（合言葉）と `/api/profile`（登録）の cookie を cookie jar に入れてから呼ぶ。取り込みは約1分40秒、計画づくりは約2分かかる。
 
+開発サーバーを動かしたまま `npm run build` しない（同じ `.next` を上書きして、開発サーバーが 500 になる）。ビルドを確かめるなら、開発サーバーを止めてから。
+
 Next.js は脆弱性の修正版にしておく（15.5.4 は Vercel にデプロイを拒否された）。
