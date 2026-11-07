@@ -27,32 +27,70 @@ function ExampleCard() {
   );
 }
 
-// 最後の手順のあとに続ける画面
-const NEXT: Record<string, { href: string; label: string }> = {
-  "/kouhai": { href: "/senpai?tour=1", label: "先輩の画面へ →" },
-};
-
 const TOURS: Record<string, Step[]> = {
+  "/kouhai": [
+    {
+      target: "profile-menu",
+      title: "senpai-note へようこそ",
+      body: "前の代（B4）が実務訓練でいなくても、現役の代が回せるように、アプリが先輩の代わりをします。ここに、あなたの役・代・部門が出ます。役を変えるときは、ここから登録し直します。",
+    },
+    {
+      target: "tabs",
+      title: "先輩の代わりをする2つの画面",
+      body: "「今年の計画」では、先輩のほうから「今はこれをやる時期」と教えます。「質問する」では、先輩に聞くように質問できます。",
+    },
+    {
+      target: "today",
+      title: "今やること",
+      body: "今日から30日以内にやることと、期限を過ぎたことです。前の代までの記録を、今年の本番の日に合わせて計算しています。",
+    },
+    {
+      target: "plan-item",
+      title: "今年の計画の項目",
+      body: "終わったらチェック。日付を変えるときは理由を、やってみたらメモ・ふりかえりを書きます。それが次の代への知識になります。",
+    },
+    {
+      target: "advice",
+      title: "去年の問題とアドバイス",
+      body: "📘 は去年までの記録（去年どうして、何が起きたか）。💡 はそれをもとにしたエージェントの提案で、前の代の先輩が ✅ すると「先輩が確認した提案」になります。",
+    },
+    {
+      target: "plan-item",
+      title: "「知識カード」＝ 先輩の知識を1つずつまとめたメモ",
+      body: "計画もアドバイスも、知識カードから作っています。前の代が「何を・いつ・なぜそう決めたか」を1枚に1つずつ書いたもので、元の Slack の投稿や資料（根拠）が付いています。項目の下で開いて確かめられます。",
+      example: true,
+    },
+    {
+      target: "dept-filter",
+      title: "部門で絞り込む",
+      body: "最初は登録した部門の項目（と局全体の項目）だけを出しています。「すべて」で局全体の計画を見られます。",
+    },
+    {
+      target: "ask-tab",
+      title: "記録にないことは、質問で",
+      body: "先輩に聞くように質問すると、確認済みの知識カードだけを根拠に答えます。記録にないことは「先輩への質問」にまとめて前の代に届き、答えが返ると知識カードになります。",
+    },
+  ],
   "/senpai": [
     {
-      target: "role-switch",
-      title: "今度は先輩（前の代）の画面です",
-      body: "後輩が聞いた答えの元になる知識カードは、ここで作られ、先輩が確かめています。先輩（B4）は実務訓練で忙しいので、することは最小限です。",
+      target: "profile-menu",
+      title: "前の代（先輩）の画面です",
+      body: "現役の代の計画と回答は、ここで先輩が確かめた知識カードから作られます。実務訓練で忙しい先輩のすることは、✅ を押すか一言答えるだけです。",
     },
     {
       target: "ingest",
       title: "1. ためる",
-      body: "Slack・Drive・Notion のふだんのやりとりを、エージェントが読んで「知識カード」にします。何を、いつ、なぜそう決めたかを1枚ずつまとめます。",
+      body: "Slack・Drive・Notion のふだんのやりとりと、現役の代が計画に残した記録を、エージェントが読んで知識カードにします。何を・いつ・なぜそう決めたかを1枚ずつまとめます。",
     },
     {
       target: "tabs",
       title: "2. 確かめる",
-      body: "できたばかりの知識カードは「確認待ち」に入ります。先輩が確かめた知識カードだけが「確認済み」になり、後輩への回答に使われます。",
+      body: "できたばかりの知識カードは「確認待ち」に入ります。先輩が確かめた知識カードだけが「確認済み」になり、現役の代の計画と回答に使われます。",
     },
     {
       target: "card-list",
-      title: "知識カードを選ぶ",
-      body: "知識カードを選ぶと右に中身が出ます。「理由が不明」と出ている知識カードは、根拠の投稿に理由が書かれていなかったものです。",
+      title: "自分の代の知識カードから",
+      body: "最初は、自分の代のやり方の知識カードだけを出しています。「すべての代」で、それより前の代の知識カードも見られます。「理由が不明」のものは、根拠に理由が書かれていなかったものです。",
     },
     {
       target: "card-panel",
@@ -60,42 +98,14 @@ const TOURS: Record<string, Step[]> = {
       body: "正しければ ✅。理由が不明な知識カードでは、エージェントが先に理由を尋ねます。一言答えれば、知識カードが直ります。根拠の元の投稿もここで見られます。",
     },
     {
+      target: "suggestions-tab",
+      title: "エージェントの提案を確かめる",
+      body: "現役の代の計画に、エージェントが「今年はこうするとよい」と提案を付けています。経験から見て正しければ ✅、違えば却下します。",
+    },
+    {
       target: "questions-tab",
-      title: "4. 抜けだけ聞く",
-      body: "知識カードで答えられなかった後輩の質問は、似たものをまとめて「後輩からの質問」に届きます。先輩が答えると、その答えが知識カードになり、後輩にも届きます。",
-    },
-  ],
-  "/kouhai": [
-    {
-      target: "role-switch",
-      title: "senpai-note へようこそ",
-      body: "毎年メンバーが入れ替わる組織のための「1代上の先輩」ノートです。ここで役を切り替えます（ログインはありません）。まずは新しい代（後輩）の画面から見ていきます。",
-    },
-    {
-      target: "cards",
-      title: "「知識カード」＝ 先輩の知識を1つずつまとめたメモ",
-      body: "去年の先輩が「何を・いつ・なぜそう決めたか」を、1枚に1つずつ書いたものです。どの知識カードにも、元になった Slack の投稿や資料（根拠）が付いています。先輩が「正しい」と確かめたものに ✅ が付きます。",
-      example: true,
-    },
-    {
-      target: "ask",
-      title: "3. 答える",
-      body: "「去年はどうしていましたか？」と聞くように質問します。先輩が確認した知識カードだけを根拠に、エージェントが答えます。",
-    },
-    {
-      target: "examples",
-      title: "質問の例",
-      body: "押すと質問欄に入ります。3つ目の「雨の日」は記録にないので、先輩への質問になります。",
-    },
-    {
-      target: "answers",
-      title: "根拠つきの回答",
-      body: "回答の下の「根拠の知識カード」を開くと、元の Slack の投稿や資料まで確かめられます。記録にないことは「先輩に聞いています」と出て、先輩が答えるとここに届きます。",
-    },
-    {
-      target: "cards",
-      title: "知識カードを読む",
-      body: "確認済みの知識カードは、質問しなくても一覧で読めます。では、この知識カードはどうやってできるのか？ 先輩の画面で見てみましょう。",
+      title: "抜けだけ答える",
+      body: "知識カードで答えられなかった現役の代の質問が、似たものをまとめて届きます。答えると知識カードになり、質問した人にも届きます。",
     },
   ],
 };
@@ -113,16 +123,6 @@ const PAD = 8;
 
 export function startTour() {
   window.dispatchEvent(new Event("senpai-note:start-tour"));
-}
-
-export function TourButton() {
-  const pathname = usePathname();
-  if (!TOURS[pathname]) return null;
-  return (
-    <button onClick={startTour} className="rounded-full border border-stone-300 px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100">
-      ？ 使い方
-    </button>
-  );
 }
 
 export function Tour() {
@@ -163,22 +163,35 @@ export function Tour() {
     [pathname],
   );
 
-  // 初めて開いたときは自動で始める（データの読み込みを少し待つ）
+  // 初めて開いたときは自動で始める。計画づくりやデータの読み込みが終わり、
+  // 説明する要素がほぼそろうまで待つ（最大3分。それを過ぎたら、ある要素だけで始める）
   useEffect(() => {
+    if (!all) return;
     let seen = false;
-    try {
-      seen = localStorage.getItem(SEEN_KEY(pathname)) === "1";
-    } catch {}
+    storage((ls) => {
+      seen = ls.getItem(SEEN_KEY(pathname)) === "1";
+    });
     const forced = new URLSearchParams(window.location.search).get("tour") === "1";
     if (forced) window.history.replaceState(null, "", pathname);
-    const timer = seen && !forced ? undefined : setTimeout(() => start(forced), 1200);
+    let timer: ReturnType<typeof setInterval> | undefined;
+    if (!seen || forced) {
+      const startedAt = Date.now();
+      timer = setInterval(() => {
+        const found = all.filter((s) => document.querySelector(`[data-tour="${s.target}"]`)).length;
+        const waited = Date.now() - startedAt;
+        if ((found >= all.length - 1 && waited > 1000) || (found > 0 && waited > 180_000)) {
+          clearInterval(timer);
+          start(forced);
+        }
+      }, 500);
+    }
     const onStart = () => start(false);
     window.addEventListener("senpai-note:start-tour", onStart);
     return () => {
-      clearTimeout(timer);
+      clearInterval(timer);
       window.removeEventListener("senpai-note:start-tour", onStart);
     };
-  }, [pathname, start]);
+  }, [pathname, start, all]);
 
   const step = steps?.[index];
 
@@ -220,7 +233,6 @@ export function Tour() {
   if (!steps || !step || !rect) return null;
 
   const isLast = index === steps.length - 1;
-  const next = NEXT[pathname];
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const width = Math.min(360, vw - 32);
@@ -283,11 +295,10 @@ export function Tour() {
               onClick={() => {
                 if (!isLast) return setIndex(index + 1);
                 close(true);
-                if (next) window.location.href = next.href;
               }}
               className="rounded-lg bg-stone-900 px-4 py-1.5 text-sm font-medium text-white"
             >
-              {isLast ? (next ? next.label : "はじめる") : "次へ"}
+              {isLast ? "はじめる" : "次へ"}
             </button>
           </div>
         </div>
