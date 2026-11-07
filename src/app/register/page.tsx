@@ -6,7 +6,7 @@ import { generationOf, PROFILE_DEPARTMENTS, type Generation, type Profile, type 
 
 const ROLES: { role: Role; title: string; body: string }[] = [
   { role: "current", title: "現役の代（B3）", body: "今年の本番を担当します。今年の計画を立てて、先輩に聞きたいことを調べます。" },
-  { role: "previous", title: "前の代（B4）", body: "引退して、実務訓練などに出ています。知識カードを確かめて、後輩の質問に答えます。" },
+  { role: "previous", title: "前の代（B4）", body: "引退して、半年間の長期インターン（実務訓練）などで学校を離れています。知識カードを確かめて、後輩の質問に答えます。" },
 ];
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];

@@ -20,7 +20,7 @@ import {
 } from "./db";
 import { CARD_KINDS, profileLabel, type Card, type Profile, type SenpaiQuestion } from "./types";
 
-const ORG = "学園祭の実行委員会 総務局（毎年9月下旬に代替わりし、前の代の B4 は10月から実務訓練で学校を離れる）";
+const ORG = "学園祭の実行委員会 総務局（毎年9月下旬に代替わりし、前の代の B4 は10月から半年間の長期インターン（実務訓練）で学校を離れ、国内外に行く）";
 
 // 返事の言葉づかいの決まり。すべてのエージェントの指示文の最後に付ける
 const STYLE = "\n\n言葉づかい: 「去年」とは書かず「昨年」と書く。「カード」とは書かず「知識カード」と書く。";

@@ -338,7 +338,7 @@ function SenpaiQuestionItem({ q, onAnswered }: { q: SenpaiQuestion; onAnswered: 
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             rows={3}
-            placeholder="実務訓練の合間に、わかる範囲で一言。答えは知識カードになり、質問した人にも届きます。"
+            placeholder="インターンの合間に、わかる範囲で一言。答えは知識カードになり、質問した人にも届きます。"
             className="field text-sm"
           />
           {error && <p className="text-sm text-pen">{error}</p>}
