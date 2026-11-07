@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { Noto_Sans_JP } from "next/font/google";
+import { BIZ_UDPGothic, Klee_One } from "next/font/google";
+import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { Tour } from "@/components/Tour";
 import "./globals.css";
 
-const noto = Noto_Sans_JP({ variable: "--font-noto-sans-jp", subsets: ["latin"], weight: ["400", "500", "700"] });
+const bizUd = BIZ_UDPGothic({ variable: "--font-biz-ud", subsets: ["latin"], weight: ["400", "700"] });
+// 先輩の赤ペンの書き込みだけに使う、教科書体のような手書き風の書体
+const klee = Klee_One({ variable: "--font-klee", subsets: ["latin"], weight: ["400", "600"] });
 
 export const metadata: Metadata = {
   title: "senpai-note",
@@ -14,17 +18,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ja">
-      <body className={`${noto.variable} font-sans antialiased`}>
-        <header className="sticky top-0 z-10 border-b border-stone-200 bg-white/90 backdrop-blur">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-            <div>
-              <div className="text-lg font-bold tracking-tight">senpai-note</div>
-              <div className="text-xs text-stone-500">若葉祭実行委員会 総務局（架空のデモ）</div>
-            </div>
+      <body className={`${bizUd.variable} ${klee.variable} font-sans antialiased`}>
+        <header className="border-b border-rule bg-sheet">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
+            <Link href="/" className="flex items-center gap-3">
+              <Logo />
+              <span className="hidden text-xs text-pencil sm:inline">若葉祭実行委員会 総務局（架空のデモ）</span>
+            </Link>
             <ProfileMenu />
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+        <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">{children}</main>
         <Tour />
       </body>
     </html>
