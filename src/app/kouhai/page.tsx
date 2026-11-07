@@ -62,6 +62,7 @@ export default function KouhaiPage() {
             e.preventDefault();
             if (text.trim() && !asking) ask(text.trim());
           }}
+          data-tour="ask"
           className="flex gap-2"
         >
           <input
@@ -74,7 +75,7 @@ export default function KouhaiPage() {
             聞く
           </button>
         </form>
-        <div className="flex flex-wrap gap-2">
+        <div data-tour="examples" className="flex flex-wrap gap-2">
           {EXAMPLES.map((ex) => (
             <button key={ex} onClick={() => setText(ex)} className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-600 hover:bg-stone-200">
               {ex}
@@ -85,14 +86,15 @@ export default function KouhaiPage() {
         {error && <p className="text-sm text-red-600">{error}</p>}
       </section>
 
-      <ul className="space-y-4">
+      <ul data-tour="answers" className="space-y-4">
+        {questions.length === 0 && <li className="rounded-xl border border-dashed border-stone-300 p-4 text-sm text-stone-500">ここに回答が出ます</li>}
         {questions.map((q) => (
           <QuestionItem key={q.id} q={q} cardById={cardById} sourceById={sourceById} senpai={q.senpaiQuestionId ? senpaiById.get(q.senpaiQuestionId) : undefined} />
         ))}
       </ul>
 
       <section className="space-y-3">
-        <button onClick={() => setShowCards((v) => !v)} className="text-sm font-medium text-stone-600 underline">
+        <button data-tour="cards" onClick={() => setShowCards((v) => !v)} className="text-sm font-medium text-stone-600 underline">
           確認済みのカードを見る（{cards.length}枚）
         </button>
         {showCards && (

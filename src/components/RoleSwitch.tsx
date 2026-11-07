@@ -11,7 +11,7 @@ export function RoleSwitch() {
   const pathname = usePathname();
   if (pathname === "/login") return null;
   return (
-    <nav className="flex rounded-full bg-stone-100 p-1 text-sm">
+    <nav data-tour="role-switch" className="flex rounded-full bg-stone-100 p-1 text-sm">
       {ROLES.map((r) => {
         const active = pathname.startsWith(r.href);
         return (

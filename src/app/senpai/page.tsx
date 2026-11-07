@@ -54,6 +54,10 @@ export default function SenpaiPage() {
   const openQuestions = senpaiQuestions.filter((q) => q.status === "open");
   const list = tab === "draft" ? drafts : confirmed;
 
+  useEffect(() => {
+    if (tab !== "questions" && list.length > 0 && !list.some((c) => c.id === selectedId)) setSelectedId(list[0].id);
+  }, [tab, list, selectedId]);
+
   return (
     <div className="space-y-5">
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4">
@@ -63,23 +67,25 @@ export default function SenpaiPage() {
         </div>
         <div className="flex items-center gap-3">
           {ingesting ? <Spinner label="Slack・Drive・Notion を読んでカードを作っています…" /> : ingestMessage && <span className="text-sm text-stone-600">{ingestMessage}</span>}
-          <button onClick={ingest} disabled={ingesting} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
+          <button data-tour="ingest" onClick={ingest} disabled={ingesting} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
             新しいやりとりを取り込む
           </button>
         </div>
       </section>
 
-      <div className="flex gap-2 text-sm">
+      <div data-tour="tabs" className="flex gap-2 text-sm">
         <TabButton active={tab === "draft"} onClick={() => setTab("draft")} label="確認待ち" count={drafts.length} />
         <TabButton active={tab === "confirmed"} onClick={() => setTab("confirmed")} label="確認済み" count={confirmed.length} />
-        <TabButton active={tab === "questions"} onClick={() => setTab("questions")} label="後輩からの質問" count={openQuestions.length} highlight />
+        <span data-tour="questions-tab">
+          <TabButton active={tab === "questions"} onClick={() => setTab("questions")} label="後輩からの質問" count={openQuestions.length} highlight />
+        </span>
       </div>
 
       {tab === "questions" ? (
         <SenpaiQuestionList items={senpaiQuestions} onAnswered={reload} />
       ) : (
         <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-          <ul className="space-y-2">
+          <ul data-tour="card-list" className="space-y-2">
             {list.length === 0 && <li className="text-sm text-stone-500">カードはありません</li>}
             {list.map((c) => (
               <li key={c.id}>
@@ -165,7 +171,7 @@ function CardPanel({ cardId, onChanged }: { cardId: string; onChanged: () => voi
   const { card, sources, messages, answers } = detail;
 
   return (
-    <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-4">
+    <div data-tour="card-panel" className="space-y-4 rounded-xl border border-stone-200 bg-white p-4">
       <CardView card={card} />
       {card.status === "draft" && (
         <button onClick={confirm} className="w-full rounded-lg bg-green-600 py-2 text-sm font-bold text-white hover:bg-green-700">
