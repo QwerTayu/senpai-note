@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CitedCards } from "@/components/CitedCards";
 import { Icon } from "@/components/Icon";
+import { Markdown } from "@/components/Markdown";
 import { api, CardView, formatDate, Spinner } from "@/components/ui";
 import type { Card, Question, SenpaiQuestion, Source } from "@/lib/types";
 
@@ -118,7 +119,7 @@ function QuestionItem({ q, cited, sourceById, senpai }: { q: Question; cited: Ca
           {formatDate(q.createdAt)}
         </span>
       </div>
-      {q.answer && <div className="max-w-[40em] whitespace-pre-wrap">{q.answer}</div>}
+      {q.answer && <Markdown className="max-w-[40em]">{q.answer}</Markdown>}
       {waiting && (
         <div className="note-pencil max-w-[40em]">
           <span className="note-label">

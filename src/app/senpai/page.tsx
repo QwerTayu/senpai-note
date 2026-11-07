@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, CardView, formatDate, formatYmd, SourceView, Spinner } from "@/components/ui";
 import { Icon, type IconName } from "@/components/Icon";
+import { Markdown } from "@/components/Markdown";
 import { useProfile } from "@/components/useProfile";
 import type { Advice, Card, CardMessage, PlanItem, Question, SenpaiQuestion, Source } from "@/lib/types";
 
@@ -260,11 +261,11 @@ function CardPanel({ cardId, onChanged }: { cardId: string; onChanged: () => voi
         </h4>
         {messages.map((m) => (
           <div key={m.id + m.createdAt} className={`flex ${m.role === "senpai" ? "justify-end" : "justify-start"}`}>
-            <p
-              className={`max-w-[85%] whitespace-pre-wrap rounded-[8px] px-4 py-2 text-sm ${m.role === "senpai" ? "bg-ink text-sheet" : "bg-paper text-ink"}`}
-            >
-              {m.text}
-            </p>
+            {m.role === "senpai" ? (
+              <p className="max-w-[85%] whitespace-pre-wrap rounded-[8px] bg-ink px-4 py-2 text-sm text-sheet">{m.text}</p>
+            ) : (
+              <Markdown className="max-w-[85%] rounded-[8px] bg-paper px-4 py-2 text-sm text-ink">{m.text}</Markdown>
+            )}
           </div>
         ))}
         {thinking && <Spinner label="エージェントが考えています" />}

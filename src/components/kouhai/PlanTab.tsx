@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CitedCards } from "@/components/CitedCards";
 import { Icon, type IconName } from "@/components/Icon";
+import { Markdown } from "@/components/Markdown";
 import { addDaysYmd, api, daysBetween, formatYmd, Spinner, todayYmd } from "@/components/ui";
 import { PLAN_DEPARTMENTS, type Advice, type Card, type Generation, type PlanDepartment, type PlanItem, type Profile, type Source } from "@/lib/types";
 
@@ -346,7 +347,7 @@ function PlanItemCard({
                   <Icon name={style.icon} size={16} />
                   {style.label}
                 </span>
-                <p>{a.text}</p>
+                <Markdown>{a.text}</Markdown>
                 <div className="mt-1 font-sans">
                   <CitedCards cards={adviceCards} sourceById={sourceById} label={`根拠の知識カード（${adviceCards.length}枚）を見る`} />
                 </div>
