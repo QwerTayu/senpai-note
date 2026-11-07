@@ -22,6 +22,9 @@ import { CARD_KINDS, profileLabel, type Card, type Profile, type SenpaiQuestion 
 
 const ORG = "学園祭の実行委員会 総務局（毎年9月下旬に代替わりし、前の代の B4 は10月から実務訓練で学校を離れる）";
 
+// 返事の言葉づかいの決まり。すべてのエージェントの指示文の最後に付ける
+const STYLE = "\n\n言葉づかい: 「去年」とは書かず「昨年」と書く。「カード」とは書かず「知識カード」と書く。";
+
 // ---- 修正の会話 POST /api/cards/[id]/chat ----
 
 const CHAT_SYSTEM = `あなたは「1代上の先輩ノート」のエージェントです。${ORG}の知識カードを、前の代の先輩と一緒に確かめて直します。
@@ -30,7 +33,7 @@ const CHAT_SYSTEM = `あなたは「1代上の先輩ノート」のエージェ�
 - 知識カードの理由（why）が「不明」なら、まず理由を先輩に尋ねる
 - 先輩の答えで知識カードを直すときは update_card を呼ぶ（この知識カードの id だけ）。先輩が言っていないことは書かない
 - 先輩が「これで正しい」「OK」などと確認したら confirm_card を呼ぶ
-- 直したら、何をどう直したかを一言で伝え、ほかに直すところがないか、確定してよいかを尋ねる`;
+- 直したら、何をどう直したかを一言で伝え、ほかに直すところがないか、確定してよいかを尋ねる${STYLE}`;
 
 const confirmCardTool = {
   name: "confirm_card",
@@ -94,7 +97,7 @@ const ANSWER_SYSTEM = `あなたは「1代上の先輩ノート」のエージ�
 - 知識カードで答えられない、または一部しか答えられないときは report_gap を呼び、前の代の先輩に聞く質問を短く1文で書く。
   すでに似た「先輩への質問」が open で出ていれば、その id を join_id に入れて合流させる
 - 一部だけ答えられるときは、answer で答えられる部分を答えたうえで report_gap も呼ぶ
-- 回答は「です・ます」で、短く。時期・締切・理由があれば書く`;
+- 回答は「です・ます」で、短く。時期・締切・理由があれば書く${STYLE}`;
 
 const answerTool = {
   name: "answer",
@@ -205,7 +208,7 @@ export async function askQuestion(text: string, profile: Profile): Promise<AskRe
 const SENPAI_ANSWER_SYSTEM = `あなたは「1代上の先輩ノート」のエージェントです。${ORG}で、後輩が聞いたことに前の代の先輩が答えました。
 
 1. 先輩の答えを知識カードにする（create_card）。先輩が言ったことだけを書き、理由が言われていなければ why は null
-2. 元の後輩の質問それぞれに、先輩の答えをもとに回答する（answer_kouhai）。「先輩からの回答です」と分かるように書く`;
+2. 元の後輩の質問それぞれに、先輩の答えをもとに回答する（answer_kouhai）。「先輩からの回答です」と分かるように書く${STYLE}`;
 
 const answerKouhaiTool = {
   name: "answer_kouhai",

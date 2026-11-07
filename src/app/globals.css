@@ -142,7 +142,7 @@ body {
     color: var(--color-pen);
   }
 
-  /* 先輩の赤ペン（去年の記録・先輩が確かめた提案・先輩の回答） */
+  /* 先輩の赤ペン（昨年の記録・先輩が確かめた提案・先輩の回答） */
   .note-pen {
     border-left: 2px solid var(--color-pen);
     padding: 4px 0 4px 16px;

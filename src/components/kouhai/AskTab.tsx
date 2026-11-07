@@ -49,7 +49,7 @@ export function AskTab({ cards, sourceById }: { cards: Card[]; sourceById: Map<s
     <div className="space-y-8">
       <section className="page space-y-4 p-6">
         <p className="max-w-[40em] text-sm text-ink-soft">
-          去年までの先輩の知識（何を・いつ・なぜ）を1つずつまとめた「知識カード」から、元の投稿を示して答えます。記録にないことは、先輩への質問にまとめます。
+          昨年までの先輩の知識（何を・いつ・なぜ）を1つずつまとめた「知識カード」から、元の投稿を示して答えます。記録にないことは、先輩への質問にまとめます。
         </p>
         <form
           onSubmit={(e) => {
@@ -59,7 +59,7 @@ export function AskTab({ cards, sourceById }: { cards: Card[]; sourceById: Map<s
           data-tour="ask"
           className="flex gap-3"
         >
-          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="去年はどうしていましたか？" className="field flex-1" />
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="昨年はどうしていましたか？" className="field flex-1" />
           <button disabled={asking || !text.trim()} className="btn btn-ink">
             聞く
           </button>

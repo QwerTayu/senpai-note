@@ -150,7 +150,7 @@ export function PlanTab({
       {running ? (
         <div className="page space-y-2 p-6">
           <Spinner label="前の代までの知識カードを読んで、今年の計画とアドバイスを作っています（1〜2分）" />
-          <p className="text-sm text-pencil">時期のある知識カードを今年の日付に直し、去年の問題とアドバイスを付けています。</p>
+          <p className="text-sm text-pencil">時期のある知識カードを今年の日付に直し、昨年の問題とアドバイスを付けています。</p>
         </div>
       ) : data.items.length === 0 ? (
         <div className="page space-y-4 p-6 text-sm">
@@ -241,7 +241,7 @@ export function PlanTab({
 
 // 記録は先輩の赤ペン。提案はエージェントの鉛筆で、先輩が確かめると赤ペンになる
 function noteStyle(a: Advice): { className: string; label: string; icon: IconName } {
-  if (a.kind === "record") return { className: "note-pen", label: "先輩の記録（去年まで）", icon: "pen" };
+  if (a.kind === "record") return { className: "note-pen", label: "先輩の記録（昨年まで）", icon: "pen" };
   if (a.status === "confirmed") return { className: "note-pen", label: `先輩が確かめた提案${a.confirmedBy ? `（${a.confirmedBy}）` : ""}`, icon: "pen" };
   return { className: "note-pencil", label: "エージェントの提案（先輩の確認待ち）", icon: "agent" };
 }
@@ -468,7 +468,7 @@ function AddItemForm({ onAdded, defaultDepartment }: { onAdded: () => Promise<un
     return (
       <button onClick={() => setOpen(true)} className="btn btn-line w-full border-dashed py-3">
         <Icon name="add" size={20} />
-        去年にはなかった仕事を計画に足す
+        昨年にはなかった仕事を計画に足す
       </button>
     );
   }
