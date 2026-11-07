@@ -63,7 +63,7 @@ export default function SenpaiPage() {
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4">
         <div>
           <h1 className="font-bold">先輩の画面</h1>
-          <p className="text-sm text-stone-500">ふだんのやりとりからできたカードに ✅ を押すか、エージェントと話して直すだけ。</p>
+          <p className="text-sm text-stone-500">ふだんのやりとりから、エージェントが知識を1つずつ「カード」にまとめます。先輩は ✅ を押すか、話して直すだけ。</p>
         </div>
         <div className="flex items-center gap-3">
           {ingesting ? <Spinner label="Slack・Drive・Notion を読んでカードを作っています…" /> : ingestMessage && <span className="text-sm text-stone-600">{ingestMessage}</span>}

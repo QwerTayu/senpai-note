@@ -55,7 +55,7 @@ export default function KouhaiPage() {
       <section className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
         <div>
           <h1 className="font-bold">後輩の画面</h1>
-          <p className="text-sm text-stone-500">前の代が確かめたカードから、元の投稿を示して答えます。記録にないことは、先輩への質問にまとめます。</p>
+          <p className="text-sm text-stone-500">去年の先輩の知識（何を・いつ・なぜ）を1つずつまとめた「カード」から、元の投稿を示して答えます。記録にないことは、先輩への質問にまとめます。</p>
         </div>
         <form
           onSubmit={(e) => {

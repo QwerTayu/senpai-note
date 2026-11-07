@@ -9,6 +9,22 @@ interface Step {
   target: string;
   title: string;
   body: string;
+  example?: boolean; // 見本のカードを吹き出しに出す
+}
+
+function ExampleCard() {
+  return (
+    <div className="space-y-1.5 rounded-lg border border-stone-200 bg-stone-50 p-3 text-xs">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="rounded bg-violet-100 px-1.5 py-0.5 font-medium text-violet-800">判断と理由</span>
+        <span className="rounded bg-green-600 px-1.5 py-0.5 font-medium text-white">✅ 確認済み</span>
+        <span className="text-stone-500">🗓 7月第3週</span>
+      </div>
+      <div className="text-sm font-bold">出店場所は7月第3週の局長会議で確定する</div>
+      <div><span className="text-stone-500">なぜ: </span>制作局の看板の発注（7月末）に間に合わせるため</div>
+      <div className="text-stone-500">根拠: Slack #総務局 の投稿 / Notion の振り返り など</div>
+    </div>
+  );
 }
 
 // 最後の手順のあとに続ける画面
@@ -56,6 +72,12 @@ const TOURS: Record<string, Step[]> = {
       body: "毎年メンバーが入れ替わる組織のための「1代上の先輩」ノートです。ここで役を切り替えます（ログインはありません）。まずは新しい代（後輩）の画面から見ていきます。",
     },
     {
+      target: "cards",
+      title: "「カード」＝ 先輩の知識を1つずつまとめたメモ",
+      body: "去年の先輩が「何を・いつ・なぜそう決めたか」を、1枚に1つずつ書いたものです。どのカードにも、元になった Slack の投稿や資料（根拠）が付いています。先輩が「正しい」と確かめたものに ✅ が付きます。",
+      example: true,
+    },
+    {
       target: "ask",
       title: "3. 答える",
       body: "「去年はどうしていましたか？」と聞くように質問します。先輩が確認したカードだけを根拠に、エージェントが答えます。",
@@ -73,7 +95,7 @@ const TOURS: Record<string, Step[]> = {
     {
       target: "cards",
       title: "カードを読む",
-      body: "確認済みのカードは、質問しなくても一覧で読めます。このカードがどうやってできるのかは、先輩の画面で見られます。",
+      body: "確認済みのカードは、質問しなくても一覧で読めます。では、このカードはどうやってできるのか？ 先輩の画面で見てみましょう。",
     },
   ],
 };
@@ -201,6 +223,7 @@ export function Tour() {
           </span>
         </div>
         <p className="text-sm leading-relaxed text-stone-700">{step.body}</p>
+        {step.example && <ExampleCard />}
         <div className="flex items-center justify-between">
           <button onClick={finish} className="text-sm text-stone-500 hover:text-stone-800">
             スキップ
