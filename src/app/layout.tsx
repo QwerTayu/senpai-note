@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_JP } from "next/font/google";
-import { RoleSwitch } from "@/components/RoleSwitch";
-import { Tour, TourButton } from "@/components/Tour";
+import { ProfileMenu } from "@/components/ProfileMenu";
+import { Tour } from "@/components/Tour";
 import "./globals.css";
 
 const noto = Noto_Sans_JP({ variable: "--font-noto-sans-jp", subsets: ["latin"], weight: ["400", "500", "700"] });
@@ -21,10 +21,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <div className="text-lg font-bold tracking-tight">senpai-note</div>
               <div className="text-xs text-stone-500">若葉祭実行委員会 総務局（架空のデモ）</div>
             </div>
-            <div className="flex items-center gap-2">
-              <TourButton />
-              <RoleSwitch />
-            </div>
+            <ProfileMenu />
           </div>
         </header>
         <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>

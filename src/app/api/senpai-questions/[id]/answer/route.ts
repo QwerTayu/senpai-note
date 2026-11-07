@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { answerAsSenpai } from "@/lib/agents";
 import { getSenpaiQuestion } from "@/lib/db";
+import { requireProfile } from "@/lib/profile";
 
 export const maxDuration = 120;
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireProfile("previous");
+  if ("error" in auth) return auth.error;
   const { id } = await params;
   const { answer } = (await req.json()) as { answer: string };
   if (!answer?.trim()) return NextResponse.json({ error: "回答が空です" }, { status: 400 });
@@ -12,7 +15,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!sq) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (sq.status === "answered") return NextResponse.json({ error: "回答済みです" }, { status: 409 });
   try {
-    return NextResponse.json(await answerAsSenpai(sq, answer.trim()));
+    return NextResponse.json(await answerAsSenpai(sq, answer.trim(), auth.profile));
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

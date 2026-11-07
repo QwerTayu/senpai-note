@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-
+// middleware が登録に合わせて /register・/kouhai・/senpai に送る
 export default function Home() {
-  redirect("/kouhai");
+  return null;
 }

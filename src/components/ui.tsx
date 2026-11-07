@@ -13,6 +13,34 @@ export function formatDate(iso: string) {
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 }
 
+const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+
+// YYYY-MM-DD を「9/11（土）」にする
+export function formatYmd(ymd: string, withYear = false) {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const w = WEEKDAYS[new Date(y, m - 1, d).getDay()];
+  return `${withYear ? `${y}年` : ""}${m}/${d}（${w}）`;
+}
+
+export function todayYmd() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export function addDaysYmd(ymd: string, days: number) {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const t = new Date(y, m - 1, d + days);
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+}
+
+export function daysBetween(fromYmd: string, toYmd: string) {
+  const [a, b] = [fromYmd, toYmd].map((v) => {
+    const [y, m, d] = v.split("-").map(Number);
+    return Date.UTC(y, m - 1, d);
+  });
+  return Math.round((b - a) / 86400000);
+}
+
 const KIND_COLOR: Record<Card["kind"], string> = {
   procedure: "bg-sky-100 text-sky-800",
   decision: "bg-violet-100 text-violet-800",
@@ -39,6 +67,7 @@ export function CardView({ card }: { card: Card }) {
       <div className="flex flex-wrap items-center gap-2">
         <KindBadge kind={card.kind} />
         <StatusBadge status={card.status} />
+        <GenerationBadge generation={card.generation} />
         {card.when && <span className="text-xs text-stone-500">🗓 {card.when}</span>}
       </div>
       <h3 className="text-lg font-bold leading-snug">{card.title}</h3>
@@ -47,8 +76,13 @@ export function CardView({ card }: { card: Card }) {
         <span className="font-medium text-stone-500">なぜ: </span>
         {card.why ? card.why : <span className="text-amber-700">理由がまだわかりません</span>}
       </div>
+      {card.confirmedBy && <div className="text-xs text-stone-500">確かめた先輩: {card.confirmedBy}</div>}
     </div>
   );
+}
+
+export function GenerationBadge({ generation }: { generation: number }) {
+  return <span className="rounded bg-stone-100 px-1.5 py-0.5 text-xs font-medium text-stone-600">{generation}年度の代</span>;
 }
 
 export function SourceView({ source }: { source: Source }) {

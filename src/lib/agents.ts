@@ -18,7 +18,7 @@ import {
   updateCard,
   updateQuestion,
 } from "./db";
-import { CARD_KINDS, type Card, type SenpaiQuestion } from "./types";
+import { CARD_KINDS, profileLabel, type Card, type Profile, type SenpaiQuestion } from "./types";
 
 const ORG = "学園祭の実行委員会 総務局（毎年9月下旬に代替わりし、前の代の B4 は10月から実務訓練で学校を離れる）";
 
@@ -38,7 +38,7 @@ const confirmCardTool = {
   input_schema: { type: "object" as const, properties: {}, additionalProperties: false },
 };
 
-export async function chatOnCard(cardId: string, senpaiText: string | null): Promise<string> {
+export async function chatOnCard(cardId: string, senpaiText: string | null, profile: Profile): Promise<string> {
   const card = await getCard(cardId);
   if (!card) throw new Error("知識カードがありません");
   if (senpaiText) await addCardMessage(cardId, "senpai", senpaiText);
@@ -76,7 +76,7 @@ export async function chatOnCard(cardId: string, senpaiText: string | null): Pro
     handlers: {
       update_card: (input) => handleUpdateCard(input, knownSourceIds, { backToDraft: false, onlyCardId: cardId }),
       confirm_card: async () => {
-        await updateCard(cardId, { status: "confirmed" });
+        await updateCard(cardId, { status: "confirmed", confirmedBy: profileLabel(profile) });
         return JSON.stringify({ ok: true });
       },
     },
@@ -134,10 +134,17 @@ export interface AskResult {
   senpaiQuestion: SenpaiQuestion | null;
 }
 
-export async function askQuestion(text: string): Promise<AskResult> {
+export async function askQuestion(text: string, profile: Profile): Promise<AskResult> {
   const [cards, openSenpaiQuestions] = await Promise.all([listCards("confirmed"), listSenpaiQuestions("open")]);
   const cardIds = new Set(cards.map((c) => c.id));
-  const questionId = await createQuestion({ text, answer: null, citedCardIds: [], status: "gap", senpaiQuestionId: null });
+  const questionId = await createQuestion({
+    text,
+    answer: null,
+    citedCardIds: [],
+    status: "gap",
+    senpaiQuestionId: null,
+    askedBy: profileLabel(profile),
+  });
 
   let answer: string | null = null;
   let cited: string[] = [];
@@ -215,7 +222,11 @@ const answerKouhaiTool = {
   strict: true,
 };
 
-export async function answerAsSenpai(senpaiQuestion: SenpaiQuestion, answerText: string): Promise<{ cardId: string | null }> {
+export async function answerAsSenpai(
+  senpaiQuestion: SenpaiQuestion,
+  answerText: string,
+  profile: Profile,
+): Promise<{ cardId: string | null }> {
   const questions = (await Promise.all(senpaiQuestion.questionIds.map((id) => getQuestion(id)))).filter((q) => q !== null);
   let cardId: string | null = null;
 
@@ -247,7 +258,7 @@ export async function answerAsSenpai(senpaiQuestion: SenpaiQuestion, answerText:
     tools: [
       {
         name: "create_card",
-        description: "先輩の答えから確認済みの知識カードを作る。根拠は先輩の答えなので source_ids は空の配列にする。",
+        description: `先輩の答えから確認済みの知識カードを作る。根拠は先輩の答えなので source_ids は空の配列にする。generation は ${profile.generation}（答えた先輩の代）。`,
         input_schema: createCardInputSchema,
       },
       answerKouhaiTool,
@@ -255,7 +266,15 @@ export async function answerAsSenpai(senpaiQuestion: SenpaiQuestion, answerText:
     handlers: {
       create_card: async (input) => {
         const parsed = createInput.parse(input);
-        cardId = await createCard({ ...parsed, sourceIds: [], answerIds: [senpaiQuestion.id], status: "confirmed" });
+        // 根拠は先輩の答え。答えた先輩の代の知識として、確認済みで作る
+        cardId = await createCard({
+          ...parsed,
+          sourceIds: [],
+          answerIds: [senpaiQuestion.id],
+          status: "confirmed",
+          generation: profile.generation,
+          confirmedBy: profileLabel(profile),
+        });
         return JSON.stringify({ ok: true, card_id: cardId });
       },
       answer_kouhai: async (input) => {
@@ -271,6 +290,6 @@ export async function answerAsSenpai(senpaiQuestion: SenpaiQuestion, answerText:
     },
   });
 
-  await answerSenpaiQuestion(senpaiQuestion.id, answerText, cardId);
+  await answerSenpaiQuestion(senpaiQuestion.id, answerText, cardId, profileLabel(profile));
   return { cardId };
 }

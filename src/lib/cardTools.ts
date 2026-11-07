@@ -17,6 +17,10 @@ const cardFieldsSchema = {
   when: { type: ["string", "null"], description: "時期（例: 「6月中」「本番の10日前まで」）。時期に関係なければ null" },
   body: { type: "string", description: "何をするか・何を決めたか。根拠に書かれていることだけを書く" },
   why: { type: ["string", "null"], description: "理由。根拠に理由が書かれていなければ推測せず null" },
+  generation: {
+    type: "integer",
+    description: "どの代のやり方・知識か（担当した本番の年。例: 2026）。根拠が複数の代にまたがるときは、いちばん新しい代",
+  },
 } as const;
 
 export const createCardInputSchema: ObjectSchema = {
@@ -25,7 +29,7 @@ export const createCardInputSchema: ObjectSchema = {
     ...cardFieldsSchema,
     source_ids: { type: "array", items: { type: "string" }, description: "根拠の投稿・資料の id（1件以上）" },
   },
-  required: ["title", "kind", "when", "body", "why", "source_ids"],
+  required: ["title", "kind", "when", "body", "why", "generation", "source_ids"],
   additionalProperties: false,
 };
 
@@ -48,6 +52,7 @@ const createInput = z.object({
   when: z.string().nullable(),
   body: z.string().min(1),
   why: z.string().nullable(),
+  generation: z.number().int().min(2000).max(2100),
   source_ids: z.array(z.string()).min(1),
 });
 
@@ -58,6 +63,7 @@ const updateInput = z.object({
   when: z.string().nullable().optional(),
   body: z.string().min(1).optional(),
   why: z.string().nullable().optional(),
+  generation: z.number().int().min(2000).max(2100).optional(),
   add_source_ids: z.array(z.string()).optional(),
 });
 
@@ -75,6 +81,8 @@ export async function handleCreateCard(raw: unknown, knownSourceIds: Set<string>
     sourceIds: input.source_ids,
     answerIds: [],
     status: "draft",
+    generation: input.generation,
+    confirmedBy: null,
   });
   return JSON.stringify({ ok: true, card_id: id });
 }
@@ -98,25 +106,30 @@ export async function handleUpdateCard(
   if (input.when !== undefined) patch.when = input.when;
   if (input.body !== undefined) patch.body = input.body;
   if (input.why !== undefined) patch.why = input.why;
+  if (input.generation !== undefined) patch.generation = input.generation;
   if (added.length) patch.sourceIds = Array.from(new Set([...card.sourceIds, ...added]));
-  if (opts.backToDraft) patch.status = "draft";
+  if (opts.backToDraft) {
+    patch.status = "draft";
+    patch.confirmedBy = null;
+  }
   await updateCard(input.card_id, patch);
   return JSON.stringify({ ok: true, card_id: input.card_id });
 }
 
 export function formatSource(s: Source): string {
-  return `<source id="${s.id}" kind="${s.kind}" title="${s.title}" author="${s.author}" posted_at="${s.postedAt}">\n${s.body}\n</source>`;
+  return `<source id="${s.id}" kind="${s.kind}" title="${s.title}" author="${s.author}" posted_at="${s.postedAt}" generation="${s.generation}">\n${s.body}\n</source>`;
 }
 
 export function formatCard(c: Card): string {
   return [
-    `<card id="${c.id}" kind="${c.kind}" status="${c.status}">`,
+    `<card id="${c.id}" kind="${c.kind}" status="${c.status}" generation="${c.generation}">`,
     `title: ${c.title}`,
     `when: ${c.when ?? "（なし）"}`,
     `body: ${c.body}`,
     `why: ${c.why ?? "（不明）"}`,
     `source_ids: ${c.sourceIds.join(", ") || "（なし）"}`,
     c.answerIds.length ? `answer_ids: ${c.answerIds.join(", ")}` : "",
+    c.confirmedBy ? `confirmed_by: ${c.confirmedBy}` : "",
     `</card>`,
   ]
     .filter(Boolean)

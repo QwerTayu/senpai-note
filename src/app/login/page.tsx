@@ -7,7 +7,7 @@ export default function LoginPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const res = await fetch("/api/login", { method: "POST", body: JSON.stringify({ passcode }) });
-    if (res.ok) location.href = "/kouhai";
+    if (res.ok) location.href = "/";
     else setError("合言葉が違います");
   }
   return (
