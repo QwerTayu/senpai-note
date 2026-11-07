@@ -101,6 +101,14 @@ const TOURS: Record<string, Step[]> = {
 };
 
 const SEEN_KEY = (path: string) => `senpai-note:tour-seen:${path}`;
+// 途中で閉じたときに、どの手順まで見たかを覚えておく（手順の target で持つ）
+const PROGRESS_KEY = (path: string) => `senpai-note:tour-progress:${path}`;
+
+function storage(fn: (s: Storage) => void) {
+  try {
+    fn(localStorage);
+  } catch {}
+}
 const PAD = 8;
 
 export function startTour() {
@@ -124,21 +132,36 @@ export function Tour() {
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
 
-  const start = useCallback(() => {
-    if (!all) return;
-    const available = all.filter((s) => document.querySelector(`[data-tour="${s.target}"]`));
-    if (available.length === 0) return;
-    setSteps(available);
-    setIndex(0);
-  }, [all]);
+  const start = useCallback(
+    (fromBeginning: boolean) => {
+      if (!all) return;
+      const available = all.filter((s) => document.querySelector(`[data-tour="${s.target}"]`));
+      if (available.length === 0) return;
+      let resumeAt = 0;
+      if (!fromBeginning) {
+        storage((ls) => {
+          const saved = ls.getItem(PROGRESS_KEY(pathname));
+          resumeAt = Math.max(0, available.findIndex((s) => s.target === saved));
+        });
+      }
+      setSteps(available);
+      setIndex(resumeAt);
+    },
+    [all, pathname],
+  );
 
-  const finish = useCallback(() => {
-    setSteps(null);
-    setRect(null);
-    try {
-      localStorage.setItem(SEEN_KEY(pathname), "1");
-    } catch {}
-  }, [pathname]);
+  // completed: 最後まで見た（続きの記録を消す）/ false: 途中で閉じた（続きから再開できる）
+  const close = useCallback(
+    (completed: boolean) => {
+      setSteps(null);
+      setRect(null);
+      storage((ls) => {
+        ls.setItem(SEEN_KEY(pathname), "1");
+        if (completed) ls.removeItem(PROGRESS_KEY(pathname));
+      });
+    },
+    [pathname],
+  );
 
   // 初めて開いたときは自動で始める（データの読み込みを少し待つ）
   useEffect(() => {
@@ -148,15 +171,20 @@ export function Tour() {
     } catch {}
     const forced = new URLSearchParams(window.location.search).get("tour") === "1";
     if (forced) window.history.replaceState(null, "", pathname);
-    const timer = seen && !forced ? undefined : setTimeout(start, 1200);
-    window.addEventListener("senpai-note:start-tour", start);
+    const timer = seen && !forced ? undefined : setTimeout(() => start(forced), 1200);
+    const onStart = () => start(false);
+    window.addEventListener("senpai-note:start-tour", onStart);
     return () => {
       clearTimeout(timer);
-      window.removeEventListener("senpai-note:start-tour", start);
+      window.removeEventListener("senpai-note:start-tour", onStart);
     };
   }, [pathname, start]);
 
   const step = steps?.[index];
+
+  useEffect(() => {
+    if (step) storage((ls) => ls.setItem(PROGRESS_KEY(pathname), step.target));
+  }, [step, pathname]);
 
   useLayoutEffect(() => {
     if (!step) return;
@@ -178,13 +206,16 @@ export function Tour() {
   useEffect(() => {
     if (!steps) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") finish();
+      // 入力欄で文字を打っているときは、矢印キーを横取りしない
+      const el = e.target as HTMLElement | null;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) return;
+      if (e.key === "Escape") close(false);
       if (e.key === "ArrowRight") setIndex((i) => Math.min(i + 1, steps.length - 1));
       if (e.key === "ArrowLeft") setIndex((i) => Math.max(i - 1, 0));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [steps, finish]);
+  }, [steps, close]);
 
   if (!steps || !step || !rect) return null;
 
@@ -198,7 +229,8 @@ export function Tour() {
   const left = Math.min(Math.max(rect.left, 16), vw - width - 16);
 
   return (
-    <div className="fixed inset-0 z-50" onClick={finish}>
+    // ツアー中もアプリを触れるように、重ねる層はクリックを通す（閉じるのはボタンと Esc だけ）
+    <div className="pointer-events-none fixed inset-0 z-50">
       {/* 明るく見せる枠。外側を大きな影で暗くする */}
       <div
         className="pointer-events-none fixed rounded-xl ring-2 ring-white transition-all duration-300"
@@ -212,22 +244,35 @@ export function Tour() {
       />
       <div
         role="dialog"
-        onClick={(e) => e.stopPropagation()}
-        className="fixed space-y-3 rounded-xl bg-white p-4 shadow-2xl transition-all duration-300"
+        className="pointer-events-auto fixed space-y-3 rounded-xl bg-white p-4 shadow-2xl transition-all duration-300"
         style={{ top, left, width, transform: below ? undefined : "translateY(-100%)" }}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="font-bold">{step.title}</div>
-          <span className="shrink-0 text-xs text-stone-400">
-            {index + 1} / {steps.length}
-          </span>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="text-xs text-stone-400">
+              {index + 1} / {steps.length}
+            </span>
+            <button
+              onClick={() => close(false)}
+              aria-label="ツアーを閉じる"
+              title="閉じる（「？ 使い方」で続きから再開できます）"
+              className="-mr-1 flex h-7 w-7 items-center justify-center rounded-full text-lg leading-none text-stone-400 hover:bg-stone-100 hover:text-stone-800"
+            >
+              ×
+            </button>
+          </div>
         </div>
         <p className="text-sm leading-relaxed text-stone-700">{step.body}</p>
         {step.example && <ExampleCard />}
         <div className="flex items-center justify-between">
-          <button onClick={finish} className="text-sm text-stone-500 hover:text-stone-800">
-            スキップ
-          </button>
+          <div>
+            {index > 0 && (
+              <button onClick={() => setIndex(0)} className="text-sm text-stone-500 hover:text-stone-800">
+                最初から
+              </button>
+            )}
+          </div>
           <div className="flex gap-2">
             {index > 0 && (
               <button onClick={() => setIndex(index - 1)} className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm">
@@ -237,7 +282,7 @@ export function Tour() {
             <button
               onClick={() => {
                 if (!isLast) return setIndex(index + 1);
-                finish();
+                close(true);
                 if (next) window.location.href = next.href;
               }}
               className="rounded-lg bg-stone-900 px-4 py-1.5 text-sm font-medium text-white"
