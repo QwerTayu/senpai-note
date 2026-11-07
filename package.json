@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.6.0",
+    "@iconify-icons/material-symbols": "^2.0.9",
+    "@iconify/react": "^6.0.4",
     "firebase-admin": "^14.5.0",
     "next": "^15.5.29",
     "react": "19.1.0",

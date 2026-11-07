@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CitedCards } from "@/components/CitedCards";
+import { Icon, type IconName } from "@/components/Icon";
 import { addDaysYmd, api, daysBetween, formatYmd, Spinner, todayYmd } from "@/components/ui";
 import { PLAN_DEPARTMENTS, type Advice, type Card, type Generation, type PlanDepartment, type PlanItem, type Profile, type Source } from "@/lib/types";
 
@@ -11,13 +12,6 @@ interface PlanData {
 }
 
 type DeptFilter = "all" | PlanDepartment;
-
-const DEPT_COLOR: Record<PlanDepartment, string> = {
-  局全体: "bg-stone-200 text-stone-700",
-  会場: "bg-sky-100 text-sky-800",
-  備品: "bg-emerald-100 text-emerald-800",
-  申請: "bg-violet-100 text-violet-800",
-};
 
 // 部門で絞り込むときは、局全体の項目も一緒に出す
 function matches(item: PlanItem, filter: DeptFilter) {
@@ -85,13 +79,13 @@ export function PlanTab({
     return map;
   }, [data?.advice]);
 
-  if (!data) return <Spinner label="読み込み中…" />;
+  if (!data) return <Spinner label="読み込み中" />;
   const gen = data.generation;
   const today = todayYmd();
 
   if (!gen) {
     return (
-      <div className="rounded-xl border border-stone-200 bg-white p-6 text-sm text-stone-600">
+      <div className="page p-6 text-sm text-ink-soft">
         {profile.generation}年度の本番の日がまだ入っていません。右上のメニューの「登録し直す」から入れてください。
       </div>
     );
@@ -106,23 +100,24 @@ export function PlanTab({
   const firstWithAdvice = items.find((i) => (adviceByItem.get(i.id) ?? []).length > 0)?.id;
 
   return (
-    <div className="space-y-5">
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4">
-        <div>
-          <div className="text-sm text-stone-500">{gen.year}年度の代の年間計画</div>
-          <div className="text-lg font-bold">
+    <div className="space-y-8">
+      <section className="flex flex-wrap items-end justify-between gap-6">
+        <div className="space-y-1">
+          <p className="text-sm text-pencil">{gen.year}年度の代の年間計画</p>
+          <h1 className="text-2xl font-bold leading-snug">
             本番 {formatYmd(gen.festivalDate, true)}
-            {daysLeft >= 0 && <span className="ml-2 text-sm font-medium text-stone-500">まであと {daysLeft} 日</span>}
-          </div>
-          <div className="text-xs text-stone-500">前の代までが確かめた知識カードから、エージェントが作りました。日付やメモは自由に直せます。</div>
+            {daysLeft >= 0 && <span className="ml-3 text-base font-normal text-ink-soft">まであと{daysLeft}日</span>}
+          </h1>
+          <p className="max-w-[40em] text-sm text-ink-soft">前の代までが確かめた知識カードから作った計画です。日付やメモは、今年のやり方に合わせて直してください。</p>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <div data-tour="dept-filter" className="flex flex-wrap gap-1 text-sm">
+        <div className="flex flex-col items-end gap-3">
+          <div data-tour="dept-filter" role="group" aria-label="部門で絞り込む" className="flex overflow-hidden rounded-[4px] border border-rule bg-sheet text-sm">
             {(["all", ...PLAN_DEPARTMENTS] as DeptFilter[]).map((d) => (
               <button
                 key={d}
                 onClick={() => setFilter(d)}
-                className={`rounded-full px-3 py-1 ${filter === d ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"}`}
+                aria-pressed={filter === d}
+                className={`border-l border-rule px-3 py-1 first:border-l-0 ${filter === d ? "bg-ink font-bold text-sheet" : "text-ink-soft hover:bg-paper"}`}
               >
                 {d === "all" ? "すべて" : d}
               </button>
@@ -131,17 +126,17 @@ export function PlanTab({
           {data.items.length > 0 && !running && (
             <div className="text-xs">
               {confirmRegenerate ? (
-                <span className="flex items-center gap-2">
-                  <span className="text-red-700">直した日付・メモ・足した項目も消えます。</span>
-                  <button onClick={generate} className="rounded bg-red-600 px-2 py-1 font-medium text-white">
+                <span className="flex items-center gap-3">
+                  <span className="text-pen">直した日付・メモ・足した項目も消えます。</span>
+                  <button onClick={generate} className="btn btn-pen px-3 py-1 text-xs">
                     作り直す
                   </button>
-                  <button onClick={() => setConfirmRegenerate(false)} className="text-stone-500">
+                  <button onClick={() => setConfirmRegenerate(false)} className="btn-text">
                     やめる
                   </button>
                 </span>
               ) : (
-                <button onClick={() => setConfirmRegenerate(true)} className="text-stone-500 underline">
+                <button onClick={() => setConfirmRegenerate(true)} className="btn-text">
                   計画を作り直す
                 </button>
               )}
@@ -150,42 +145,60 @@ export function PlanTab({
         </div>
       </section>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-pen">{error}</p>}
 
       {running ? (
-        <div className="space-y-2 rounded-xl border border-stone-200 bg-white p-6">
-          <Spinner label="前の代までの知識カードを読んで、今年の計画とアドバイスを作っています（1〜2分）…" />
-          <p className="text-xs text-stone-500">時期のある知識カードを今年の日付に直し、去年の問題とアドバイスを付けています。</p>
+        <div className="page space-y-2 p-6">
+          <Spinner label="前の代までの知識カードを読んで、今年の計画とアドバイスを作っています（1〜2分）" />
+          <p className="text-sm text-pencil">時期のある知識カードを今年の日付に直し、去年の問題とアドバイスを付けています。</p>
         </div>
       ) : data.items.length === 0 ? (
-        <div className="space-y-3 rounded-xl border border-stone-200 bg-white p-6 text-sm">
+        <div className="page space-y-4 p-6 text-sm">
           <p>まだ計画がありません。前の代までの知識カードから、今年の年間計画を作ります。</p>
-          <button onClick={generate} className="rounded-lg bg-stone-900 px-4 py-2 font-medium text-white">
+          <button onClick={generate} className="btn btn-ink">
+            <Icon name="calendar" />
             今年の計画を作る
           </button>
         </div>
       ) : (
         <>
-          <section data-tour="today" className="space-y-2 rounded-xl border-2 border-sky-200 bg-sky-50 p-4">
-            <h2 className="font-bold">今やること</h2>
-            <p className="text-xs text-sky-900">期限を過ぎたものと、30日以内にやること（{formatYmd(today)} 時点）</p>
+          <section data-tour="today" className="page border-t-4 border-t-ink">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 px-6 pb-2 pt-4">
+              <h2 className="flex items-center gap-2 text-lg font-bold">
+                <Icon name="today" size={22} />
+                今やること
+              </h2>
+              <p className="text-xs text-pencil">期限を過ぎたものと、30日以内にやること（{formatYmd(today)}時点）</p>
+            </div>
             {soon.length === 0 ? (
-              <p className="text-sm text-stone-600">今やることはありません。</p>
+              <p className="px-6 pb-6 text-sm text-ink-soft">今やることはありません。</p>
             ) : (
-              <ul className="space-y-1.5">
+              <ul>
                 {soon.map((i) => {
                   const overdue = i.date < today;
                   const advice = adviceByItem.get(i.id) ?? [];
                   return (
-                    <li key={i.id}>
-                      <a href={`#plan-${i.id}`} className="flex flex-wrap items-baseline gap-x-2 rounded-lg bg-white px-3 py-2 text-sm hover:ring-1 hover:ring-sky-300">
-                        <span className={`font-medium ${overdue ? "text-red-700" : "text-stone-700"}`}>
+                    <li key={i.id} className="border-t border-rule">
+                      <a href={`#plan-${i.id}`} className="grid grid-cols-[7em_1fr_auto] items-baseline gap-4 px-6 py-3 text-sm hover:bg-paper">
+                        <span className={overdue ? "font-bold text-pen" : "text-ink-soft"}>
                           {formatYmd(i.date)}
-                          {overdue && "（過ぎています）"}
+                          {overdue && (
+                            <span className="flex items-center gap-1 text-xs font-normal">
+                              <Icon name="error" size={14} />
+                              期限を過ぎています
+                            </span>
+                          )}
                         </span>
-                        <span className="font-bold">{i.title}</span>
-                        <DeptBadge department={i.department} />
-                        {advice.length > 0 && <span className="text-xs text-stone-500">先輩からのアドバイス {advice.length}件</span>}
+                        <span>
+                          <span className="font-bold">{i.title}</span>
+                          {advice.length > 0 && (
+                            <span className="ml-3 inline-flex items-center gap-1 text-xs text-pen">
+                              <Icon name="pen" size={14} />
+                              {advice.length}件
+                            </span>
+                          )}
+                        </span>
+                        <span className="tag">{i.department}</span>
                       </a>
                     </li>
                   );
@@ -194,13 +207,14 @@ export function PlanTab({
             )}
           </section>
 
-          <section data-tour="plan-timeline" className="space-y-5">
+          <section data-tour="plan-timeline" className="page">
             {[...byMonth.entries()].map(([month, monthItems]) => (
-              <div key={month} className="space-y-2">
-                <h3 className="sticky top-[60px] z-[1] bg-[#f7f6f2]/95 py-1 text-sm font-bold text-stone-500">
-                  {Number(month.slice(0, 4))}年{Number(month.slice(5, 7))}月
+              <div key={month} className="grid border-t border-rule first:border-t-0 md:grid-cols-[120px_1fr]">
+                <h3 className="px-6 pt-4 text-sm font-bold text-pencil md:border-r md:border-rule md:py-6">
+                  {Number(month.slice(0, 4))}年
+                  <span className="ml-1 text-xl text-ink md:ml-0 md:block">{Number(month.slice(5, 7))}月</span>
                 </h3>
-                <ul className="space-y-2">
+                <ul>
                   {monthItems.map((i) => (
                     <PlanItemCard
                       key={i.id}
@@ -225,15 +239,12 @@ export function PlanTab({
   );
 }
 
-function DeptBadge({ department }: { department: PlanDepartment }) {
-  return <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${DEPT_COLOR[department]}`}>{department}</span>;
+// 記録は先輩の赤ペン。提案はエージェントの鉛筆で、先輩が確かめると赤ペンになる
+function noteStyle(a: Advice): { className: string; label: string; icon: IconName } {
+  if (a.kind === "record") return { className: "note-pen", label: "先輩の記録（去年まで）", icon: "pen" };
+  if (a.status === "confirmed") return { className: "note-pen", label: `先輩が確かめた提案${a.confirmedBy ? `（${a.confirmedBy}）` : ""}`, icon: "pen" };
+  return { className: "note-pencil", label: "エージェントの提案（先輩の確認待ち）", icon: "agent" };
 }
-
-const ADVICE_STYLE = {
-  record: { icon: "📘", label: "去年までの記録", box: "border-sky-200 bg-sky-50", text: "text-sky-900" },
-  confirmed: { icon: "💡", label: "先輩が確認した提案", box: "border-green-200 bg-green-50", text: "text-green-900" },
-  draft: { icon: "💡", label: "エージェントの提案（先輩の確認待ち）", box: "border-amber-200 bg-amber-50", text: "text-amber-900" },
-};
 
 function PlanItemCard({
   item,
@@ -291,125 +302,133 @@ function PlanItemCard({
   }
 
   return (
-    <li id={`plan-${item.id}`} data-tour={tourAdvice ? "plan-item" : undefined} className={`scroll-mt-24 space-y-3 rounded-xl border bg-white p-4 ${item.done ? "border-stone-200 opacity-60" : "border-stone-200"}`}>
-      <div className="flex items-start gap-3">
+    <li id={`plan-${item.id}`} data-tour={tourAdvice ? "plan-item" : undefined} className="scroll-mt-8 space-y-4 border-t border-rule px-6 py-6 first:border-t-0">
+      <div className="flex items-start gap-4">
         <input
           type="checkbox"
           checked={item.done}
           disabled={saving}
           onChange={(e) => patch({ done: e.target.checked })}
-          className="mt-1 h-5 w-5 shrink-0 accent-stone-900"
-          aria-label="終わった"
+          className="mt-1 h-5 w-5 shrink-0 accent-ink"
+          aria-label={`${item.title}を終わったことにする`}
         />
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`text-sm font-bold ${overdue ? "text-red-700" : "text-stone-700"}`}>{formatYmd(item.date)}</span>
-            <DeptBadge department={item.department} />
-            {item.origin === "added" && <span className="rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-600">自分たちで足した項目</span>}
+        <div className={`min-w-0 flex-1 space-y-2 ${item.done ? "text-pencil" : ""}`}>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className={`text-sm font-bold ${overdue ? "text-pen" : "text-ink-soft"}`}>{formatYmd(item.date)}</span>
+            <span className="tag">{item.department}</span>
+            {item.origin === "added" && <span className="tag">自分たちで足した項目</span>}
+            {item.done && <span className="text-xs">終わった</span>}
           </div>
-          <div className={`font-bold leading-snug ${item.done ? "line-through" : ""}`}>{item.title}</div>
-          {item.detail && <p className="text-sm leading-relaxed text-stone-700">{item.detail}</p>}
+          <h4 className={`text-base font-bold leading-snug ${item.done ? "line-through" : ""}`}>{item.title}</h4>
+          {item.detail && <p className="max-w-[40em] text-sm text-ink-soft">{item.detail}</p>}
           {item.originalDate && item.originalDate !== item.date && (
-            <p className="text-xs text-stone-500">
-              最初の予定 {formatYmd(item.originalDate)} から変えました{item.dateChangeReason && `: ${item.dateChangeReason}`}
+            <p className="text-xs text-pencil">
+              最初の予定{formatYmd(item.originalDate)}から変えました{item.dateChangeReason && `。理由: ${item.dateChangeReason}`}
             </p>
           )}
-          {item.memo && mode !== "memo" && <p className="rounded-lg bg-stone-50 px-3 py-2 text-sm">📝 {item.memo}</p>}
+          {item.memo && mode !== "memo" && (
+            <p className="max-w-[40em] border-l-2 border-ink pl-4 text-sm">
+              <span className="block text-xs font-bold text-pencil">ふりかえり</span>
+              {item.memo}
+            </p>
+          )}
         </div>
       </div>
 
       {sorted.length > 0 && (
-        <div data-tour={tourAdvice ? "advice" : undefined} className="space-y-2">
+        <div data-tour={tourAdvice ? "advice" : undefined} className="ml-9 max-w-[40em] space-y-4">
           {sorted.map((a) => {
-            const style = ADVICE_STYLE[a.kind === "record" ? "record" : a.status];
+            const style = noteStyle(a);
             const adviceCards = a.cardIds.map((id) => cardById.get(id)).filter((c): c is Card => !!c);
             return (
-              <div key={a.id} className={`space-y-1 rounded-lg border px-3 py-2 ${style.box}`}>
-                <div className={`text-xs font-bold ${style.text}`}>
-                  {style.icon} {style.label}
-                  {a.status === "confirmed" && a.kind === "suggestion" && a.confirmedBy && `（${a.confirmedBy}）`}
+              <div key={a.id} className={style.className}>
+                <span className="note-label">
+                  <Icon name={style.icon} size={16} />
+                  {style.label}
+                </span>
+                <p>{a.text}</p>
+                <div className="mt-1 font-sans">
+                  <CitedCards cards={adviceCards} sourceById={sourceById} label={`根拠の知識カード（${adviceCards.length}枚）を見る`} />
                 </div>
-                <p className="text-sm leading-relaxed">{a.text}</p>
-                <CitedCards cards={adviceCards} sourceById={sourceById} label={`根拠の知識カード（${adviceCards.length}枚）`} />
               </div>
             );
           })}
         </div>
       )}
 
-      <CitedCards cards={cards} sourceById={sourceById} label={`元にした知識カード（${cards.length}枚）と元の投稿`} />
+      <div className="ml-9 space-y-3">
+        <CitedCards cards={cards} sourceById={sourceById} label={`元にした知識カード（${cards.length}枚）と元の投稿を見る`} />
 
-      {mode === "date" && (
-        <div className="space-y-2 rounded-lg bg-stone-50 p-3">
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded border border-stone-300 px-2 py-1" />
-            <span className="text-stone-500">に変える</span>
+        {mode === "date" && (
+          <div className="max-w-[40em] space-y-3 rounded-[8px] bg-paper p-4">
+            <label className="flex flex-wrap items-center gap-3 text-sm">
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="field w-auto" />
+              <span className="text-ink-soft">に変える</span>
+            </label>
+            <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="変える理由（次の代の知識になります）" className="field" />
+            <div className="flex gap-3">
+              <button
+                disabled={saving || !reason.trim() || date === item.date}
+                onClick={() => patch({ date, dateChangeReason: reason.trim() })}
+                className="btn btn-ink"
+              >
+                日付を変える
+              </button>
+              <button onClick={() => setMode("view")} className="btn-text">
+                やめる
+              </button>
+            </div>
           </div>
-          <input
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="変える理由（次の代の知識になります）"
-            className="w-full rounded border border-stone-300 px-2 py-1 text-sm"
-          />
-          <div className="flex gap-2 text-sm">
-            <button
-              disabled={saving || !reason.trim() || date === item.date}
-              onClick={() => patch({ date, dateChangeReason: reason.trim() })}
-              className="rounded bg-stone-900 px-3 py-1 font-medium text-white disabled:opacity-40"
-            >
-              保存
+        )}
+        {mode === "memo" && (
+          <div className="max-w-[40em] space-y-3 rounded-[8px] bg-paper p-4">
+            <textarea
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              rows={3}
+              placeholder="やってみてどうだったか（次の代の知識になります）"
+              className="field"
+            />
+            <div className="flex gap-3">
+              <button disabled={saving} onClick={() => patch({ memo: memo.trim() || null })} className="btn btn-ink">
+                ふりかえりを残す
+              </button>
+              <button onClick={() => setMode("view")} className="btn-text">
+                やめる
+              </button>
+            </div>
+          </div>
+        )}
+        {mode === "delete" && (
+          <div className="flex max-w-[40em] flex-wrap items-center gap-3 rounded-[8px] bg-pen-wash p-4 text-sm">
+            <span className="text-pen">この項目を計画から消しますか？</span>
+            <button disabled={saving} onClick={remove} className="btn btn-pen">
+              消す
             </button>
-            <button onClick={() => setMode("view")} className="text-stone-500">
+            <button onClick={() => setMode("view")} className="btn-text">
               やめる
             </button>
           </div>
-        </div>
-      )}
-      {mode === "memo" && (
-        <div className="space-y-2 rounded-lg bg-stone-50 p-3">
-          <textarea
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-            rows={3}
-            placeholder="やってみてどうだったか（次の代の知識になります）"
-            className="w-full rounded border border-stone-300 px-2 py-1 text-sm"
-          />
-          <div className="flex gap-2 text-sm">
-            <button disabled={saving} onClick={() => patch({ memo: memo.trim() || null })} className="rounded bg-stone-900 px-3 py-1 font-medium text-white disabled:opacity-40">
-              保存
+        )}
+        {mode === "view" && (
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <button onClick={() => setMode("date")} className="btn-text">
+              <Icon name="editDate" size={16} />
+              日付を変える
             </button>
-            <button onClick={() => setMode("view")} className="text-stone-500">
-              やめる
+            <button onClick={() => setMode("memo")} className="btn-text">
+              <Icon name="editNote" size={16} />
+              {item.memo ? "ふりかえりを直す" : "ふりかえりを書く"}
             </button>
+            <button onClick={() => setMode("delete")} className="btn-text">
+              <Icon name="delete" size={16} />
+              消す
+            </button>
+            {item.updatedBy && <span className="text-xs text-pencil md:ml-auto">最後に直した人: {item.updatedBy}</span>}
           </div>
-        </div>
-      )}
-      {mode === "delete" && (
-        <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm">
-          <span className="text-red-800">この項目を計画から消しますか？</span>
-          <button disabled={saving} onClick={remove} className="rounded bg-red-600 px-3 py-1 font-medium text-white">
-            消す
-          </button>
-          <button onClick={() => setMode("view")} className="text-stone-500">
-            やめる
-          </button>
-        </div>
-      )}
-      {mode === "view" && (
-        <div className="flex gap-4 text-xs text-stone-500">
-          <button onClick={() => setMode("date")} className="hover:text-stone-900">
-            日付を変える
-          </button>
-          <button onClick={() => setMode("memo")} className="hover:text-stone-900">
-            {item.memo ? "メモを直す" : "メモ・ふりかえりを書く"}
-          </button>
-          <button onClick={() => setMode("delete")} className="hover:text-red-700">
-            消す
-          </button>
-          {item.updatedBy && <span className="ml-auto">最後に直した人: {item.updatedBy}</span>}
-        </div>
-      )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+        )}
+        {error && <p className="text-sm text-pen">{error}</p>}
+      </div>
     </li>
   );
 }
@@ -447,30 +466,31 @@ function AddItemForm({ onAdded, defaultDepartment }: { onAdded: () => Promise<un
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} className="w-full rounded-xl border border-dashed border-stone-300 py-3 text-sm text-stone-600 hover:bg-white">
-        ＋ 去年にはなかった仕事を計画に足す
+      <button onClick={() => setOpen(true)} className="btn btn-line w-full border-dashed py-3">
+        <Icon name="add" size={20} />
+        去年にはなかった仕事を計画に足す
       </button>
     );
   }
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-      <div className="font-bold">計画に項目を足す</div>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="やること" className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm" />
-      <div className="flex flex-wrap gap-2">
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-lg border border-stone-300 px-3 py-2 text-sm" />
-        <select value={department} onChange={(e) => setDepartment(e.target.value as PlanDepartment)} className="rounded-lg border border-stone-300 px-3 py-2 text-sm">
+    <form onSubmit={submit} className="page space-y-4 p-6">
+      <h3 className="font-bold">計画に項目を足す</h3>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="やること" className="field" />
+      <div className="flex flex-wrap gap-3">
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="field w-auto" />
+        <select value={department} onChange={(e) => setDepartment(e.target.value as PlanDepartment)} className="field w-auto">
           {PLAN_DEPARTMENTS.map((d) => (
             <option key={d}>{d}</option>
           ))}
         </select>
       </div>
-      <input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="何をするか（任意）" className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm" />
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <div className="flex gap-2">
-        <button disabled={saving || !title.trim()} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
-          足す
+      <input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="何をするか（なくてもよい）" className="field" />
+      {error && <p className="text-sm text-pen">{error}</p>}
+      <div className="flex gap-3">
+        <button disabled={saving || !title.trim()} className="btn btn-ink">
+          計画に足す
         </button>
-        <button type="button" onClick={() => setOpen(false)} className="text-sm text-stone-500">
+        <button type="button" onClick={() => setOpen(false)} className="btn-text">
           やめる
         </button>
       </div>

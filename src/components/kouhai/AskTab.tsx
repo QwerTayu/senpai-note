@@ -1,10 +1,11 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CitedCards } from "@/components/CitedCards";
+import { Icon } from "@/components/Icon";
 import { api, CardView, formatDate, Spinner } from "@/components/ui";
 import type { Card, Question, SenpaiQuestion, Source } from "@/lib/types";
 
-const EXAMPLES = ["教室使用申請はいつまでに、どうやって出せばいいですか？", "備品貸出の締切はいつで、なぜその日なんですか？", "本番の日に雨が降ったら、屋外の企画は体育館に移せますか？"];
+const EXAMPLES = ["教室使用申請はいつまでに、どうやって出せばいいですか？", "備品貸出の締切はいつで、なぜその日なんですか？", "局内で飲み会を開く時の幹事の仕事と手順は？"];
 
 export function AskTab({ cards, sourceById }: { cards: Card[]; sourceById: Map<string, Source> }) {
   const [text, setText] = useState("");
@@ -12,7 +13,7 @@ export function AskTab({ cards, sourceById }: { cards: Card[]; sourceById: Map<s
   const [error, setError] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [senpaiQuestions, setSenpaiQuestions] = useState<SenpaiQuestion[]>([]);
-  const [showCards, setShowCards] = useState(false);
+  const [showCards, setShowCards] = useState(true);
 
   const reload = useCallback(async () => {
     const [q, sq] = await Promise.all([
@@ -45,9 +46,9 @@ export function AskTab({ cards, sourceById }: { cards: Card[]; sourceById: Map<s
   const senpaiById = useMemo(() => new Map(senpaiQuestions.map((s) => [s.id, s])), [senpaiQuestions]);
 
   return (
-    <div className="space-y-5">
-      <section className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-        <p className="text-sm text-stone-500">
+    <div className="space-y-8">
+      <section className="page space-y-4 p-6">
+        <p className="max-w-[40em] text-sm text-ink-soft">
           去年までの先輩の知識（何を・いつ・なぜ）を1つずつまとめた「知識カード」から、元の投稿を示して答えます。記録にないことは、先輩への質問にまとめます。
         </p>
         <form
@@ -56,31 +57,27 @@ export function AskTab({ cards, sourceById }: { cards: Card[]; sourceById: Map<s
             if (text.trim() && !asking) ask(text.trim());
           }}
           data-tour="ask"
-          className="flex gap-2"
+          className="flex gap-3"
         >
-          <input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="去年はどうしていましたか？"
-            className="flex-1 rounded-lg border border-stone-300 px-3 py-2"
-          />
-          <button disabled={asking || !text.trim()} className="rounded-lg bg-stone-900 px-5 font-medium text-white disabled:opacity-40">
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="去年はどうしていましたか？" className="field flex-1" />
+          <button disabled={asking || !text.trim()} className="btn btn-ink">
             聞く
           </button>
         </form>
-        <div data-tour="examples" className="flex flex-wrap gap-2">
+        <div data-tour="examples" className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+          <span className="text-xs text-pencil">質問の例</span>
           {EXAMPLES.map((ex) => (
-            <button key={ex} onClick={() => setText(ex)} className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-600 hover:bg-stone-200">
+            <button key={ex} onClick={() => setText(ex)} className="btn-text text-left">
               {ex}
             </button>
           ))}
         </div>
-        {asking && <Spinner label="知識カードを探しています…" />}
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {asking && <Spinner label="知識カードを探しています" />}
+        {error && <p className="text-sm text-pen">{error}</p>}
       </section>
 
-      <ul data-tour="answers" className="space-y-4">
-        {questions.length === 0 && <li className="rounded-xl border border-dashed border-stone-300 p-4 text-sm text-stone-500">ここに回答が出ます</li>}
+      <ul data-tour="answers" className="page">
+        {questions.length === 0 && <li className="p-6 text-sm text-pencil">質問すると、ここに回答が出ます。</li>}
         {questions.map((q) => (
           <QuestionItem
             key={q.id}
@@ -92,14 +89,14 @@ export function AskTab({ cards, sourceById }: { cards: Card[]; sourceById: Map<s
         ))}
       </ul>
 
-      <section className="space-y-3">
-        <button data-tour="cards" onClick={() => setShowCards((v) => !v)} className="text-sm font-medium text-stone-600 underline">
-          確認済みの知識カードを見る（{cards.length}枚）
+      <section className="space-y-4">
+        <button data-tour="cards" onClick={() => setShowCards((v) => !v)} aria-expanded={showCards} className="btn-text">
+          {showCards ? "知識カードを閉じる" : `確認済みの知識カードを見る（${cards.length}枚）`}
         </button>
         {showCards && (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {cards.map((c) => (
-              <div key={c.id} className="rounded-xl border border-stone-200 bg-white p-4">
+              <div key={c.id} className="page p-6">
                 <CardView card={c} />
               </div>
             ))}
@@ -113,24 +110,30 @@ export function AskTab({ cards, sourceById }: { cards: Card[]; sourceById: Map<s
 function QuestionItem({ q, cited, sourceById, senpai }: { q: Question; cited: Card[]; sourceById: Map<string, Source>; senpai?: SenpaiQuestion }) {
   const waiting = q.status === "gap" && senpai?.status === "open";
   return (
-    <li className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="font-bold">Q. {q.text}</div>
-        <span className="shrink-0 text-xs text-stone-400">
+    <li className="space-y-4 border-t border-rule p-6 first:border-t-0">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h3 className="font-bold">{q.text}</h3>
+        <span className="text-xs text-pencil">
           {q.askedBy && `${q.askedBy}・`}
           {formatDate(q.createdAt)}
         </span>
       </div>
-      {q.answer && <div className="whitespace-pre-wrap leading-relaxed">{q.answer}</div>}
+      {q.answer && <div className="max-w-[40em] whitespace-pre-wrap">{q.answer}</div>}
       {waiting && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
-          <div className="font-medium text-amber-900">記録にないので、前の代の先輩に聞いています</div>
-          <div className="mt-1 text-amber-800">先輩への質問: 「{senpai.text}」</div>
-          {senpai.questionIds.length > 1 && <div className="mt-1 text-xs text-amber-700">同じことを聞いた人がほかに{senpai.questionIds.length - 1}人います</div>}
+        <div className="note-pencil max-w-[40em]">
+          <span className="note-label">
+            <Icon name="question" size={16} />
+            記録にないので、前の代の先輩に聞いています
+          </span>
+          <p>{senpai.text}</p>
+          {senpai.questionIds.length > 1 && <p className="font-sans text-xs">同じことを聞いた人がほかに{senpai.questionIds.length - 1}人います</p>}
         </div>
       )}
       {q.status === "answered" && senpai?.status === "answered" && (
-        <div className="text-xs font-medium text-green-700">{senpai.answeredBy ?? "先輩"}が答えてくれました（知識カードにもなりました）</div>
+        <p className="flex items-center gap-1 text-xs font-bold text-pen">
+          <Icon name="pen" size={16} />
+          {senpai.answeredBy ?? "先輩"}が答えました。この答えは知識カードにもなりました。
+        </p>
       )}
       <CitedCards cards={cited} sourceById={sourceById} />
     </li>

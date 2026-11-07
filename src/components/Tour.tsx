@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { Icon } from "./Icon";
 
 // 画面の要素を1つずつ明るくして説明するツアー。
 // 要素には data-tour="..." を付ける。見つからない手順は飛ばす。
@@ -14,15 +15,21 @@ interface Step {
 
 function ExampleCard() {
   return (
-    <div className="space-y-1.5 rounded-lg border border-stone-200 bg-stone-50 p-3 text-xs">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <span className="rounded bg-violet-100 px-1.5 py-0.5 font-medium text-violet-800">判断と理由</span>
-        <span className="rounded bg-green-600 px-1.5 py-0.5 font-medium text-white">✅ 確認済み</span>
-        <span className="text-stone-500">🗓 7月第3週</span>
+    <div className="space-y-2 rounded-[8px] bg-paper p-4 text-xs">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="tag">判断と理由</span>
+        <span className="tag tag-pen">先輩が確認済み</span>
+        <span className="tag">2026年度の代</span>
       </div>
-      <div className="text-sm font-bold">出店場所は7月第3週の局長会議で確定する</div>
-      <div><span className="text-stone-500">なぜ: </span>制作局の看板の発注（7月末）に間に合わせるため</div>
-      <div className="text-stone-500">根拠: Slack #総務局 の投稿 / Notion の振り返り など</div>
+      <p className="text-sm font-bold">出店場所は7月第3週の局長会議で確定する</p>
+      <dl className="grid grid-cols-[3em_1fr] gap-x-2 gap-y-1">
+        <dt className="text-pencil">いつ</dt>
+        <dd>7月第3週</dd>
+        <dt className="text-pencil">なぜ</dt>
+        <dd>制作局の看板の発注（7月末）に間に合わせるため</dd>
+        <dt className="text-pencil">根拠</dt>
+        <dd>Slack #総務局 の投稿、Notion の振り返り</dd>
+      </dl>
     </div>
   );
 }
@@ -52,7 +59,7 @@ const TOURS: Record<string, Step[]> = {
     {
       target: "advice",
       title: "去年の問題とアドバイス",
-      body: "📘 は去年までの記録（去年どうして、何が起きたか）。💡 はそれをもとにしたエージェントの提案で、前の代の先輩が ✅ すると「先輩が確認した提案」になります。",
+      body: "赤ペンは、先輩の記録（去年どうして、何が起きたか）。鉛筆は、それをもとにしたエージェントの提案です。前の代の先輩が確かめると、鉛筆の提案も赤ペンになります。",
     },
     {
       target: "plan-item",
@@ -68,14 +75,14 @@ const TOURS: Record<string, Step[]> = {
     {
       target: "ask-tab",
       title: "記録にないことは、質問で",
-      body: "先輩に聞くように質問すると、確認済みの知識カードだけを根拠に答えます。記録にないことは「先輩への質問」にまとめて前の代に届き、答えが返ると知識カードになります。",
+      body: "「質問する」で聞くと、確認済みの知識カードだけを根拠に答えます。記録にないことは「先輩への質問」にまとめて前の代に届き、答えが返ると知識カードになります。",
     },
   ],
   "/senpai": [
     {
       target: "profile-menu",
       title: "前の代（先輩）の画面です",
-      body: "現役の代の計画と回答は、ここで先輩が確かめた知識カードから作られます。実務訓練で忙しい先輩のすることは、✅ を押すか一言答えるだけです。",
+      body: "現役の代の計画と回答は、ここで先輩が確かめた知識カードから作られます。実務訓練で忙しい先輩のすることは、確かめるか一言答えるだけです。",
     },
     {
       target: "ingest",
@@ -94,13 +101,13 @@ const TOURS: Record<string, Step[]> = {
     },
     {
       target: "card-panel",
-      title: "✅ を押すか、話して直すだけ",
-      body: "正しければ ✅。理由が不明な知識カードでは、エージェントが先に理由を尋ねます。一言答えれば、知識カードが直ります。根拠の元の投稿もここで見られます。",
+      title: "確かめるか、話して直すだけ",
+      body: "正しければ確認済みにします。理由が不明な知識カードでは、エージェントが先に理由を尋ねます。一言答えれば、知識カードが直ります。根拠の元の投稿もここで見られます。",
     },
     {
       target: "suggestions-tab",
       title: "エージェントの提案を確かめる",
-      body: "現役の代の計画に、エージェントが「今年はこうするとよい」と提案を付けています。経験から見て正しければ ✅、違えば却下します。",
+      body: "現役の代の計画に、エージェントが「今年はこうするとよい」と鉛筆で提案を書いています。経験から見て正しければ確かめ、違えば却下します。確かめた提案は、現役の画面で赤ペンになります。",
     },
     {
       target: "questions-tab",
@@ -245,49 +252,49 @@ export function Tour() {
     <div className="pointer-events-none fixed inset-0 z-50">
       {/* 明るく見せる枠。外側を大きな影で暗くする */}
       <div
-        className="pointer-events-none fixed rounded-xl ring-2 ring-white transition-all duration-300"
+        className="pointer-events-none fixed rounded-[8px] ring-2 ring-sheet transition-all duration-300"
         style={{
           top: rect.top - PAD,
           left: rect.left - PAD,
           width: rect.width + PAD * 2,
           height: rect.height + PAD * 2,
-          boxShadow: "0 0 0 9999px rgba(20, 20, 20, 0.6)",
+          boxShadow: "0 0 0 9999px rgba(29, 43, 68, 0.55)",
         }}
       />
       <div
         role="dialog"
-        className="pointer-events-auto fixed space-y-3 rounded-xl bg-white p-4 shadow-2xl transition-all duration-300"
+        className="pointer-events-auto fixed space-y-4 rounded-[8px] border-t-4 border-t-ink bg-sheet p-6 shadow-[0_16px_40px_rgba(29,43,68,0.24)] transition-all duration-300"
         style={{ top, left, width, transform: below ? undefined : "translateY(-100%)" }}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="font-bold">{step.title}</div>
+        <div className="flex items-start justify-between gap-4">
+          <h2 className="font-bold leading-snug">{step.title}</h2>
           <div className="flex shrink-0 items-center gap-2">
-            <span className="text-xs text-stone-400">
+            <span className="text-xs text-pencil">
               {index + 1} / {steps.length}
             </span>
             <button
               onClick={() => close(false)}
               aria-label="ツアーを閉じる"
               title="閉じる（「？ 使い方」で続きから再開できます）"
-              className="-mr-1 flex h-7 w-7 items-center justify-center rounded-full text-lg leading-none text-stone-400 hover:bg-stone-100 hover:text-stone-800"
+              className="-mr-2 flex h-8 w-8 items-center justify-center rounded-[4px] text-pencil hover:bg-paper hover:text-ink"
             >
-              ×
+              <Icon name="close" size={20} />
             </button>
           </div>
         </div>
-        <p className="text-sm leading-relaxed text-stone-700">{step.body}</p>
+        <p className="text-sm text-ink-soft">{step.body}</p>
         {step.example && <ExampleCard />}
         <div className="flex items-center justify-between">
           <div>
             {index > 0 && (
-              <button onClick={() => setIndex(0)} className="text-sm text-stone-500 hover:text-stone-800">
+              <button onClick={() => setIndex(0)} className="btn-text">
                 最初から
               </button>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             {index > 0 && (
-              <button onClick={() => setIndex(index - 1)} className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm">
+              <button onClick={() => setIndex(index - 1)} className="btn btn-line">
                 戻る
               </button>
             )}
@@ -296,7 +303,7 @@ export function Tour() {
                 if (!isLast) return setIndex(index + 1);
                 close(true);
               }}
-              className="rounded-lg bg-stone-900 px-4 py-1.5 text-sm font-medium text-white"
+              className="btn btn-ink"
             >
               {isLast ? "はじめる" : "次へ"}
             </button>

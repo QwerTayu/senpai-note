@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { Icon, type IconName } from "@/components/Icon";
 import { AskTab } from "@/components/kouhai/AskTab";
 import { PlanTab } from "@/components/kouhai/PlanTab";
 import { api, Spinner } from "@/components/ui";
@@ -31,14 +32,14 @@ export default function KouhaiPage() {
   const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
   const sourceById = useMemo(() => new Map(sources.map((s) => [s.id, s])), [sources]);
 
-  if (!profile) return <Spinner label="読み込み中…" />;
+  if (!profile) return <Spinner label="読み込み中" />;
 
   return (
-    <div className="space-y-5">
-      <div data-tour="tabs" className="flex gap-2 text-sm">
-        <TabButton active={tab === "plan"} onClick={() => setTab("plan")} label="今年の計画" />
+    <div className="space-y-8">
+      <div data-tour="tabs" role="tablist" className="flex gap-6 border-b border-rule">
+        <TabButton active={tab === "plan"} onClick={() => setTab("plan")} label="今年の計画" icon="calendar" />
         <span data-tour="ask-tab">
-          <TabButton active={tab === "ask"} onClick={() => setTab("ask")} label="先輩に聞くように質問する" />
+          <TabButton active={tab === "ask"} onClick={() => setTab("ask")} label="質問する" icon="agent" />
         </span>
       </div>
       {tab === "plan" ? (
@@ -50,9 +51,10 @@ export default function KouhaiPage() {
   );
 }
 
-function TabButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+function TabButton({ active, onClick, label, icon }: { active: boolean; onClick: () => void; label: string; icon: IconName }) {
   return (
-    <button onClick={onClick} className={`rounded-lg px-4 py-2 font-medium ${active ? "bg-stone-900 text-white" : "bg-white text-stone-600 hover:text-stone-900"}`}>
+    <button role="tab" aria-selected={active} onClick={onClick} className="tab -mb-px">
+      <Icon name={icon} size={20} />
       {label}
     </button>
   );

@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { api, CardView, formatDate, formatYmd, GenerationBadge, SourceView, Spinner } from "@/components/ui";
+import { api, CardView, formatDate, formatYmd, SourceView, Spinner } from "@/components/ui";
+import { Icon, type IconName } from "@/components/Icon";
 import { useProfile } from "@/components/useProfile";
 import type { Advice, Card, CardMessage, PlanItem, Question, SenpaiQuestion, Source } from "@/lib/types";
 
@@ -74,30 +75,32 @@ export default function SenpaiPage() {
   }, [list, selectedId]);
 
   return (
-    <div className="space-y-5">
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4">
-        <div>
-          <h1 className="font-bold">先輩の画面{profile && `（${profile.generation}年度の代）`}</h1>
-          <p className="text-sm text-stone-500">
-            ふだんのやりとりから、エージェントが知識を1つずつ「知識カード」にまとめます。先輩は ✅ を押すか、話して直すだけ。現役の代の計画に付いた、エージェントの提案も確かめます。
+    <div className="space-y-8">
+      <section className="flex flex-wrap items-end justify-between gap-6">
+        <div className="space-y-1">
+          <p className="text-sm text-pencil">{profile ? `${profile.generation}年度の代` : "前の代"}の先輩の画面</p>
+          <h1 className="text-2xl font-bold leading-snug">確かめて、一言答えるだけ</h1>
+          <p className="max-w-[40em] text-sm text-ink-soft">
+            ふだんのやりとりから、エージェントが知識を1つずつ「知識カード」にまとめます。正しければ確認済みにし、違えばエージェントと話して直します。現役の代の計画に付いた提案と、記録にない質問も、ここに届きます。
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {ingesting ? <Spinner label="Slack・Drive・Notion を読んで知識カードを作っています…" /> : ingestMessage && <span className="text-sm text-stone-600">{ingestMessage}</span>}
-          <button data-tour="ingest" onClick={ingest} disabled={ingesting} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
+        <div className="flex flex-col items-end gap-2">
+          <button data-tour="ingest" onClick={ingest} disabled={ingesting} className="btn btn-ink">
+            <Icon name="ingest" />
             新しいやりとりを取り込む
           </button>
+          {ingesting ? <Spinner label="Slack・Drive・Notion を読んで知識カードを作っています" /> : ingestMessage && <p className="text-sm text-ink-soft">{ingestMessage}</p>}
         </div>
       </section>
 
-      <div data-tour="tabs" className="flex gap-2 text-sm">
-        <TabButton active={tab === "draft"} onClick={() => setTab("draft")} label="確認待ち" count={drafts.length} />
-        <TabButton active={tab === "confirmed"} onClick={() => setTab("confirmed")} label="確認済み" count={confirmed.length} />
+      <div data-tour="tabs" role="tablist" className="flex flex-wrap gap-x-6 border-b border-rule">
+        <TabButton active={tab === "draft"} onClick={() => setTab("draft")} label="確認待ち" count={drafts.length} icon="inbox" />
+        <TabButton active={tab === "confirmed"} onClick={() => setTab("confirmed")} label="確認済み" count={confirmed.length} icon="checkCircle" />
         <span data-tour="suggestions-tab">
-          <TabButton active={tab === "suggestions"} onClick={() => setTab("suggestions")} label="エージェントの提案" count={suggestions.length} highlight />
+          <TabButton active={tab === "suggestions"} onClick={() => setTab("suggestions")} label="エージェントの提案" count={suggestions.length} icon="agent" alert />
         </span>
         <span data-tour="questions-tab">
-          <TabButton active={tab === "questions"} onClick={() => setTab("questions")} label="後輩からの質問" count={openQuestions.length} highlight />
+          <TabButton active={tab === "questions"} onClick={() => setTab("questions")} label="後輩からの質問" count={openQuestions.length} icon="question" alert />
         </span>
       </div>
 
@@ -106,52 +109,64 @@ export default function SenpaiPage() {
       ) : tab === "suggestions" ? (
         <SuggestionList items={suggestions} generation={suggestionGeneration} cards={cards} onChanged={reload} />
       ) : (
-        <div className="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-          <ul data-tour="card-list" className="space-y-2">
-            <li className="flex gap-1 text-xs">
-              <button
-                onClick={() => setOnlyMine(true)}
-                className={`rounded-full px-3 py-1 ${onlyMine ? "bg-stone-900 text-white" : "bg-white text-stone-600"}`}
-              >
+        <div className="grid items-start gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+          <div data-tour="card-list" className="page">
+            <div role="group" aria-label="代で絞り込む" className="flex gap-4 border-b border-rule px-4 py-3 text-sm">
+              <button onClick={() => setOnlyMine(true)} aria-pressed={onlyMine} className={onlyMine ? "font-bold" : "btn-text"}>
                 自分の代{profile && `（${profile.generation}年度）`}
               </button>
-              <button onClick={() => setOnlyMine(false)} className={`rounded-full px-3 py-1 ${!onlyMine ? "bg-stone-900 text-white" : "bg-white text-stone-600"}`}>
+              <button onClick={() => setOnlyMine(false)} aria-pressed={!onlyMine} className={!onlyMine ? "font-bold" : "btn-text"}>
                 すべての代
               </button>
-            </li>
-            {list.length === 0 && <li className="text-sm text-stone-500">知識カードはありません</li>}
-            {list.map((c) => (
-              <li key={c.id}>
-                <button
-                  onClick={() => setSelectedId(c.id)}
-                  className={`w-full rounded-lg border p-3 text-left transition ${selectedId === c.id ? "border-stone-900 bg-white" : "border-stone-200 bg-white hover:border-stone-400"}`}
-                >
-                  <div className="text-sm font-medium leading-snug">{c.title}</div>
-                  <div className="mt-1 flex flex-wrap gap-2 text-xs text-stone-500">
-                    {!onlyMine && <GenerationBadge generation={c.generation} />}
-                    {c.when && <span>🗓 {c.when}</span>}
-                    {!c.why && <span className="text-amber-700">理由が不明</span>}
-                    {c.answerIds.length > 0 && <span>先輩の回答から</span>}
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <div>{selectedId ? <CardPanel key={selectedId} cardId={selectedId} onChanged={reload} /> : <p className="text-sm text-stone-500">左の知識カードを選んでください</p>}</div>
+            </div>
+            <ul>
+              {list.length === 0 && <li className="p-4 text-sm text-pencil">知識カードはありません</li>}
+              {list.map((c) => (
+                <li key={c.id} className="border-t border-rule first:border-t-0">
+                  <button
+                    onClick={() => setSelectedId(c.id)}
+                    aria-current={selectedId === c.id}
+                    className={`w-full border-l-4 px-4 py-3 text-left ${selectedId === c.id ? "border-l-ink bg-paper" : "border-l-transparent hover:bg-paper"}`}
+                  >
+                    <span className="block text-sm font-bold leading-snug">{c.title}</span>
+                    <span className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-pencil">
+                      {!onlyMine && <span>{c.generation}年度の代</span>}
+                      {c.when && <span>{c.when}</span>}
+                      {!c.why && <span className="text-pen">理由が不明</span>}
+                      {c.answerIds.length > 0 && <span>先輩の回答から</span>}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>{selectedId ? <CardPanel key={selectedId} cardId={selectedId} onChanged={reload} /> : <p className="text-sm text-pencil">左の知識カードを選んでください</p>}</div>
         </div>
       )}
     </div>
   );
 }
 
-function TabButton({ active, onClick, label, count, highlight }: { active: boolean; onClick: () => void; label: string; count: number; highlight?: boolean }) {
+function TabButton({
+  active,
+  onClick,
+  label,
+  count,
+  icon,
+  alert,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count: number;
+  icon: IconName;
+  alert?: boolean;
+}) {
   return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium ${active ? "bg-stone-900 text-white" : "bg-white text-stone-600 hover:text-stone-900"}`}
-    >
+    <button role="tab" aria-selected={active} onClick={onClick} className="tab -mb-px">
+      <Icon name={icon} size={20} />
       {label}
-      <span className={`rounded-full px-1.5 text-xs ${highlight && count > 0 ? "bg-red-500 text-white" : active ? "bg-white/20" : "bg-stone-100"}`}>{count}</span>
+      <span className={alert && count > 0 ? "count-alert" : "count"}>{count}</span>
     </button>
   );
 }
@@ -201,44 +216,59 @@ function CardPanel({ cardId, onChanged }: { cardId: string; onChanged: () => voi
     onChanged();
   }
 
-  if (!detail) return <Spinner label="読み込み中…" />;
+  if (!detail) return <Spinner label="読み込み中" />;
   const { card, sources, messages, answers } = detail;
 
   return (
-    <div data-tour="card-panel" className="space-y-4 rounded-xl border border-stone-200 bg-white p-4">
-      <CardView card={card} />
-      {card.status === "draft" && (
-        <button onClick={confirm} className="w-full rounded-lg bg-green-600 py-2 text-sm font-bold text-white hover:bg-green-700">
-          ✅ これで正しい
-        </button>
-      )}
+    <div data-tour="card-panel" className="page">
+      <div className="space-y-4 p-6">
+        <CardView card={card} />
+        {card.status === "draft" && (
+          <button onClick={confirm} className="btn btn-pen w-full py-3">
+            <Icon name="check" size={20} />
+            正しいので確認済みにする
+          </button>
+        )}
+      </div>
 
-      <details open className="space-y-2">
-        <summary className="cursor-pointer text-sm font-medium text-stone-600">根拠（{sources.length + answers.length}件）</summary>
-        <div className="mt-2 space-y-2">
+      <details open className="group border-t border-rule px-6 py-4">
+        <summary className="cursor-pointer list-none text-sm font-bold text-ink-soft">
+          根拠（{sources.length + answers.length}件）
+          <span className="ml-2 text-xs font-normal text-pencil group-open:hidden">開く</span>
+        </summary>
+        <div className="mt-3 space-y-3">
           {sources.map((s) => (
             <SourceView key={s.id} source={s} />
           ))}
           {answers.map((a) => (
-            <div key={a.id} className="rounded-lg border border-stone-200 p-3 text-sm">
-              <div className="mb-1 text-xs text-stone-500">先輩への質問への回答 {a.answeredBy && `${a.answeredBy}・`}
-                {a.answeredAt && formatDate(a.answeredAt)}</div>
-              <div className="font-medium">Q. {a.text}</div>
-              <div className="whitespace-pre-wrap">A. {a.answer}</div>
+            <div key={a.id} className="border-l-2 border-rule py-1 pl-4 text-sm">
+              <p className="mb-1 text-xs text-pencil">
+                先輩への質問への回答 {a.answeredBy && `${a.answeredBy}、`}
+                {a.answeredAt && formatDate(a.answeredAt)}
+              </p>
+              <p className="font-bold">{a.text}</p>
+              <p className="whitespace-pre-wrap">{a.answer}</p>
             </div>
           ))}
         </div>
       </details>
 
-      <div className="space-y-2 border-t border-stone-100 pt-3">
-        <div className="text-sm font-medium text-stone-600">エージェントと話して直す</div>
+      <div className="space-y-3 border-t border-rule px-6 py-4">
+        <h4 className="flex items-center gap-2 text-sm font-bold text-ink-soft">
+          <Icon name="agent" />
+          エージェントと話して直す
+        </h4>
         {messages.map((m) => (
           <div key={m.id + m.createdAt} className={`flex ${m.role === "senpai" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm ${m.role === "senpai" ? "bg-stone-900 text-white" : "bg-stone-100"}`}>{m.text}</div>
+            <p
+              className={`max-w-[85%] whitespace-pre-wrap rounded-[8px] px-4 py-2 text-sm ${m.role === "senpai" ? "bg-ink text-sheet" : "bg-paper text-ink"}`}
+            >
+              {m.text}
+            </p>
           </div>
         ))}
-        {thinking && <Spinner label="エージェントが考えています…" />}
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {thinking && <Spinner label="エージェントが考えています" />}
+        {error && <p className="text-sm text-pen">{error}</p>}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -246,15 +276,10 @@ function CardPanel({ cardId, onChanged }: { cardId: string; onChanged: () => voi
             send(text.trim());
             setText("");
           }}
-          className="flex gap-2"
+          className="flex gap-3"
         >
-          <input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="例: 7/10にしたのは、体育会の倉庫の棚卸しがあるから"
-            className="flex-1 rounded-lg border border-stone-300 px-3 py-2 text-sm"
-          />
-          <button disabled={thinking || !text.trim()} className="rounded-lg bg-stone-900 px-4 text-sm font-medium text-white disabled:opacity-40">
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="例: 7/10にしたのは、体育会の倉庫の棚卸しがあるから" className="field flex-1 text-sm" />
+          <button disabled={thinking || !text.trim()} className="btn btn-ink">
             送る
           </button>
         </form>
@@ -264,9 +289,9 @@ function CardPanel({ cardId, onChanged }: { cardId: string; onChanged: () => voi
 }
 
 function SenpaiQuestionList({ items, onAnswered }: { items: SenpaiQuestion[]; onAnswered: () => void }) {
-  if (items.length === 0) return <p className="text-sm text-stone-500">後輩からの質問はまだありません。記録にないことを後輩が聞くと、ここに届きます。</p>;
+  if (items.length === 0) return <p className="text-sm text-pencil">後輩からの質問はまだありません。記録にないことを後輩が聞くと、ここに届きます。</p>;
   return (
-    <ul className="space-y-3">
+    <ul className="page">
       {items.map((q) => (
         <SenpaiQuestionItem key={q.id} q={q} onAnswered={onAnswered} />
       ))}
@@ -299,37 +324,40 @@ function SenpaiQuestionItem({ q, onAnswered }: { q: SenpaiQuestion; onAnswered: 
   }
 
   return (
-    <li className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="font-bold leading-snug">{q.text}</div>
-        <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${q.status === "open" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-800"}`}>
-          {q.status === "open" ? "回答待ち" : "回答済み"}
-        </span>
+    <li className="space-y-4 border-t border-rule p-6 first:border-t-0">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+        <h3 className="font-bold leading-snug">{q.text}</h3>
+        <span className={`tag ${q.status === "open" ? "tag-pen" : ""}`}>{q.status === "open" ? "回答待ち" : "回答済み"}</span>
       </div>
-      <div className="text-xs text-stone-500">
-        後輩の質問 {q.questionIds.length}件をまとめました{originals.length > 0 && `: ${originals.map((o) => `「${o.text}」`).join(" ")}`}
-      </div>
+      <p className="text-xs text-pencil">
+        後輩の質問{q.questionIds.length}件をまとめました{originals.length > 0 && `: ${originals.map((o) => `「${o.text}」`).join(" ")}`}
+      </p>
       {q.status === "open" ? (
-        <form onSubmit={submit} className="space-y-2">
+        <form onSubmit={submit} className="space-y-3">
           <textarea
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             rows={3}
-            placeholder="実務訓練の合間に、わかる範囲で一言。答えは知識カードになり、後輩にも届きます。"
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm"
+            placeholder="実務訓練の合間に、わかる範囲で一言。答えは知識カードになり、質問した人にも届きます。"
+            className="field text-sm"
           />
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="flex items-center justify-end gap-3">
-            {sending && <Spinner label="知識カードにしています…" />}
-            <button disabled={sending || !answer.trim()} className="rounded-lg bg-stone-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
+          {error && <p className="text-sm text-pen">{error}</p>}
+          <div className="flex items-center justify-end gap-4">
+            {sending && <Spinner label="知識カードにしています" />}
+            <button disabled={sending || !answer.trim()} className="btn btn-ink">
               答える
             </button>
           </div>
         </form>
       ) : (
-        <div className="space-y-1 rounded-lg bg-stone-50 p-3 text-sm whitespace-pre-wrap">
-          {q.answeredBy && <div className="text-xs text-stone-500">{q.answeredBy}の回答</div>}
-          {q.answer}
+        <div className="note-pen">
+          {q.answeredBy && (
+            <span className="note-label">
+              <Icon name="pen" size={16} />
+              {q.answeredBy}の回答
+            </span>
+          )}
+          <p className="whitespace-pre-wrap">{q.answer}</p>
         </div>
       )}
     </li>
@@ -339,18 +367,14 @@ function SenpaiQuestionItem({ q, onAnswered }: { q: SenpaiQuestion; onAnswered: 
 function SuggestionList({ items, generation, cards, onChanged }: { items: Suggestion[]; generation: number | null; cards: Card[]; onChanged: () => void }) {
   const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
   if (items.length === 0) {
-    return (
-      <p className="text-sm text-stone-500">
-        確認待ちの提案はありません。現役の代（{generation}年度）が計画を作ると、エージェントの提案がここに届きます。
-      </p>
-    );
+    return <p className="text-sm text-pencil">確認待ちの提案はありません。現役の代（{generation}年度）が計画を作ると、エージェントの提案がここに届きます。</p>;
   }
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-stone-500">
-        {generation}年度の代の計画に、エージェントが付けた提案です。あなたの経験から見て正しければ ✅ を押してください。後輩の画面で「先輩が確認した提案」になります。
+    <div className="space-y-4">
+      <p className="max-w-[40em] text-sm text-ink-soft">
+        {generation}年度の代の計画に、エージェントが鉛筆で書いた提案です。経験から見て正しければ、赤ペンでなぞるように確かめてください。現役の画面で「先輩が確かめた提案」になります。
       </p>
-      <ul className="space-y-3">
+      <ul className="page">
         {items.map((s) => (
           <SuggestionItem key={s.id} s={s} cards={s.cardIds.map((id) => cardById.get(id)).filter((c): c is Card => !!c)} onChanged={onChanged} />
         ))}
@@ -374,25 +398,28 @@ function SuggestionItem({ s, cards, onChanged }: { s: Suggestion; cards: Card[];
     }
   }
   return (
-    <li className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-      <div className="text-xs text-stone-500">
-        計画の項目: {formatYmd(s.planItem.date)} {s.planItem.title}（{s.planItem.department}）
+    <li className="space-y-4 border-t border-rule p-6 first:border-t-0">
+      <p className="text-sm">
+        <span className="font-bold text-ink-soft">{formatYmd(s.planItem.date)}</span>
+        <span className="ml-3 font-bold">{s.planItem.title}</span>
+        <span className="tag ml-3">{s.planItem.department}</span>
+      </p>
+      <div className="note-pencil max-w-[40em]">
+        <span className="note-label">
+          <Icon name="agent" size={16} />
+          エージェントの提案
+        </span>
+        <p>{s.text}</p>
       </div>
-      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-        <div className="text-xs font-bold text-amber-900">💡 エージェントの提案</div>
-        <p className="text-sm leading-relaxed">{s.text}</p>
-      </div>
-      {cards.length > 0 && (
-        <div className="text-xs text-stone-500">
-          根拠: {cards.map((c) => `「${c.title}」（${c.generation}年度）`).join(" ")}
-        </div>
-      )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <div className="flex gap-2">
-        <button disabled={busy} onClick={() => act("POST")} className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-bold text-white hover:bg-green-700 disabled:opacity-40">
-          ✅ この提案でよい
+      {cards.length > 0 && <p className="text-xs text-pencil">根拠: {cards.map((c) => `「${c.title}」（${c.generation}年度）`).join(" ")}</p>}
+      {error && <p className="text-sm text-pen">{error}</p>}
+      <div className="flex flex-wrap gap-3">
+        <button disabled={busy} onClick={() => act("POST")} className="btn btn-pen">
+          <Icon name="check" />
+          この提案でよい
         </button>
-        <button disabled={busy} onClick={() => act("DELETE")} className="rounded-lg border border-stone-300 px-4 py-2 text-sm text-stone-600 disabled:opacity-40">
+        <button disabled={busy} onClick={() => act("DELETE")} className="btn btn-line">
+          <Icon name="close" />
           却下する
         </button>
       </div>

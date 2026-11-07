@@ -1,10 +1,203 @@
 @import "tailwindcss";
 
+/*
+ * 先輩の手帳。自分のノート（ink）に、先輩が赤ペン（pen）で書き込み、
+ * エージェントの提案は先輩が確かめるまで鉛筆（pencil）で薄く書く。
+ * 余白は 4px の倍数だけを使う（Tailwind の 1・2・3・4・6・8）。角丸は 4px（ラベル）と 8px（ページ）の2段。
+ */
 @theme inline {
-  --font-sans: var(--font-noto-sans-jp), system-ui, sans-serif;
+  --font-sans: var(--font-biz-ud), system-ui, sans-serif;
+  --font-hand: var(--font-klee), var(--font-biz-ud), serif;
+
+  --color-paper: #eef1f4;
+  --color-sheet: #ffffff;
+  --color-ink: #1d2b44;
+  --color-ink-soft: #46546b;
+  --color-rule: #d5dce4;
+  --color-pen: #c2303a;
+  --color-pen-wash: #fbeff0;
+  --color-pencil: #6e7884;
+
+  --radius-tag: 4px;
+  --radius-page: 8px;
 }
 
 body {
-  background: #f7f6f2;
-  color: #1f2328;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-feature-settings: "palt";
+  line-height: 1.7;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  /* ノートのページ。中身の区切りは罫線で、箱を重ねない */
+  .page {
+    background: var(--color-sheet);
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-page);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: var(--radius-tag);
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+    transition: background-color 120ms;
+  }
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .btn-ink {
+    background: var(--color-ink);
+    color: var(--color-sheet);
+  }
+  .btn-ink:not(:disabled):hover {
+    background: var(--color-ink-soft);
+  }
+  .btn-pen {
+    background: var(--color-pen);
+    color: var(--color-sheet);
+  }
+  .btn-pen:not(:disabled):hover {
+    background: #a5262f;
+  }
+  .btn-line {
+    border: 1px solid var(--color-rule);
+    color: var(--color-ink-soft);
+    background: var(--color-sheet);
+  }
+  .btn-line:not(:disabled):hover {
+    border-color: var(--color-pencil);
+    color: var(--color-ink);
+  }
+  /* 文字だけの小さな操作 */
+  .btn-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--color-pencil);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--color-rule);
+  }
+  .btn-text:hover {
+    color: var(--color-ink);
+    text-decoration-color: currentColor;
+  }
+
+  .field {
+    width: 100%;
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-tag);
+    background: var(--color-sheet);
+    padding: 8px 12px;
+    font-size: 15px;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-ink);
+  }
+
+  /* 部門・種類などのラベル。色分けはせず、枠と文字だけ */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-tag);
+    padding: 0 8px;
+    font-size: 12px;
+    line-height: 20px;
+    color: var(--color-ink-soft);
+    white-space: nowrap;
+  }
+  .tag-ink {
+    border-color: var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-sheet);
+  }
+  .tag-pen {
+    border-color: var(--color-pen);
+    color: var(--color-pen);
+  }
+
+  /* 先輩の赤ペン（去年の記録・先輩が確かめた提案・先輩の回答） */
+  .note-pen {
+    border-left: 2px solid var(--color-pen);
+    padding: 4px 0 4px 16px;
+    font-family: var(--font-hand);
+    color: var(--color-pen);
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  /* エージェントの鉛筆（先輩が確かめるまでの提案） */
+  .note-pencil {
+    border-left: 2px dashed var(--color-pencil);
+    padding: 4px 0 4px 16px;
+    font-family: var(--font-hand);
+    color: var(--color-pencil);
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .note-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.6;
+  }
+
+  .tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px solid transparent;
+    padding: 8px 4px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-pencil);
+  }
+  .tab:hover {
+    color: var(--color-ink);
+  }
+  .tab[aria-selected="true"] {
+    border-bottom-color: var(--color-ink);
+    color: var(--color-ink);
+  }
+  .count {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-pencil);
+  }
+  .count-alert {
+    border-radius: 999px;
+    background: var(--color-pen);
+    padding: 0 8px;
+    font-size: 12px;
+    line-height: 20px;
+    color: var(--color-sheet);
+  }
 }

@@ -41,68 +41,62 @@ export function daysBetween(fromYmd: string, toYmd: string) {
   return Math.round((b - a) / 86400000);
 }
 
-const KIND_COLOR: Record<Card["kind"], string> = {
-  procedure: "bg-sky-100 text-sky-800",
-  decision: "bg-violet-100 text-violet-800",
-  exception: "bg-amber-100 text-amber-800",
-  lesson: "bg-rose-100 text-rose-800",
-  contact: "bg-emerald-100 text-emerald-800",
-};
-
 export function KindBadge({ kind }: { kind: Card["kind"] }) {
-  return <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${KIND_COLOR[kind]}`}>{CARD_KIND_LABEL[kind]}</span>;
+  return <span className="tag">{CARD_KIND_LABEL[kind]}</span>;
 }
 
 export function StatusBadge({ status }: { status: Card["status"] }) {
-  return status === "confirmed" ? (
-    <span className="rounded bg-green-600 px-1.5 py-0.5 text-xs font-medium text-white">✅ 確認済み</span>
-  ) : (
-    <span className="rounded bg-stone-200 px-1.5 py-0.5 text-xs font-medium text-stone-700">確認待ち</span>
-  );
+  return status === "confirmed" ? <span className="tag tag-pen">先輩が確認済み</span> : <span className="tag">確認待ち</span>;
+}
+
+export function GenerationBadge({ generation }: { generation: number }) {
+  return <span className="tag">{generation}年度の代</span>;
 }
 
 export function CardView({ card }: { card: Card }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <KindBadge kind={card.kind} />
         <StatusBadge status={card.status} />
         <GenerationBadge generation={card.generation} />
-        {card.when && <span className="text-xs text-stone-500">🗓 {card.when}</span>}
       </div>
       <h3 className="text-lg font-bold leading-snug">{card.title}</h3>
-      <p className="whitespace-pre-wrap text-sm leading-relaxed">{card.body}</p>
-      <div className="rounded-lg bg-stone-50 px-3 py-2 text-sm">
-        <span className="font-medium text-stone-500">なぜ: </span>
-        {card.why ? card.why : <span className="text-amber-700">理由がまだわかりません</span>}
-      </div>
-      {card.confirmedBy && <div className="text-xs text-stone-500">確かめた先輩: {card.confirmedBy}</div>}
+      <dl className="grid grid-cols-[4em_1fr] gap-x-3 gap-y-2 text-sm">
+        {card.when && (
+          <>
+            <dt className="text-pencil">いつ</dt>
+            <dd>{card.when}</dd>
+          </>
+        )}
+        <dt className="text-pencil">なにを</dt>
+        <dd className="whitespace-pre-wrap">{card.body}</dd>
+        <dt className="text-pencil">なぜ</dt>
+        <dd>{card.why ? card.why : <span className="text-pen">理由がまだわかりません</span>}</dd>
+      </dl>
+      {card.confirmedBy && <p className="text-xs text-pencil">確かめた先輩: {card.confirmedBy}</p>}
     </div>
   );
 }
 
-export function GenerationBadge({ generation }: { generation: number }) {
-  return <span className="rounded bg-stone-100 px-1.5 py-0.5 text-xs font-medium text-stone-600">{generation}年度の代</span>;
-}
-
 export function SourceView({ source }: { source: Source }) {
   return (
-    <div className="rounded-lg border border-stone-200 bg-white p-3 text-sm">
-      <div className="mb-1 flex flex-wrap items-center gap-x-2 text-xs text-stone-500">
-        <span className="rounded bg-stone-100 px-1.5 py-0.5 font-medium text-stone-700">{SOURCE_KIND_LABEL[source.kind]}</span>
-        <span className="font-medium text-stone-700">{source.title}</span>
+    <div className="border-l-2 border-rule py-1 pl-4 text-sm">
+      <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-pencil">
+        <span className="tag">{SOURCE_KIND_LABEL[source.kind]}</span>
+        <span className="font-bold text-ink-soft">{source.title}</span>
         <span>{source.author}</span>
         <span>{formatDate(source.postedAt)}</span>
       </div>
-      <p className="line-clamp-6 whitespace-pre-wrap leading-relaxed">{source.body}</p>
+      <p className="line-clamp-6 whitespace-pre-wrap">{source.body}</p>
     </div>
   );
 }
 
 export function Spinner({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2 text-sm text-stone-500">
-      <span className="h-3 w-3 animate-spin rounded-full border-2 border-stone-300 border-t-stone-700" />
+    <div role="status" className="flex items-center gap-2 text-sm text-pencil">
+      <span className="h-3 w-3 animate-spin rounded-full border-2 border-rule border-t-ink" />
       {label}
     </div>
   );

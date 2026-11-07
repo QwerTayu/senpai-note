@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Icon } from "@/components/Icon";
 import { api, Spinner } from "@/components/ui";
 import { generationOf, PROFILE_DEPARTMENTS, type Generation, type Profile, type ProfileDepartment, type Role } from "@/lib/types";
 
@@ -82,37 +83,41 @@ export default function RegisterPage() {
   const generationOptions = [currentGeneration - 2, currentGeneration - 1, currentGeneration, currentGeneration + 1];
 
   return (
-    <form onSubmit={submit} className="mx-auto max-w-2xl space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-xl font-bold">senpai-note へようこそ</h1>
-        <p className="text-sm text-stone-600">
+    <form onSubmit={submit} className="mx-auto max-w-2xl space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-bold">senpai-note へようこそ</h1>
+        <p className="text-sm text-ink-soft">
           毎年メンバーが入れ替わる組織のための「1代上の先輩」ノートです。前の代（B4）がいなくても、現役の代（B3）が回せるように、先輩の代わりをします。最初に、あなたのことを教えてください。
         </p>
       </div>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold text-stone-700">1. あなたはどちらですか？</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <h2 className="font-bold">1. あなたはどちらですか？</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
           {ROLES.map((r) => (
             <button
               type="button"
               key={r.role}
               onClick={() => chooseRole(r.role)}
-              className={`rounded-xl border-2 bg-white p-4 text-left transition ${role === r.role ? "border-stone-900" : "border-stone-200 hover:border-stone-400"}`}
+              aria-pressed={role === r.role}
+              className={`rounded-[8px] border-2 bg-sheet p-4 text-left ${role === r.role ? "border-ink" : "border-rule hover:border-pencil"}`}
             >
-              <div className="font-bold">{r.title}</div>
-              <div className="mt-1 text-sm text-stone-600">{r.body}</div>
+              <span className="flex items-center gap-2 font-bold">
+                <Icon name={r.role === "current" ? "school" : "work"} size={22} />
+                {r.title}
+              </span>
+              <span className="mt-1 block text-sm text-ink-soft">{r.body}</span>
             </button>
           ))}
         </div>
       </section>
 
       {role && (
-        <section className="space-y-4 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="text-sm font-bold text-stone-700">2. あなたの代・部門・名前</h2>
+        <section className="page space-y-6 p-6">
+          <h2 className="font-bold">2. あなたの代・部門・名前</h2>
           <label className="block space-y-1">
-            <span className="text-sm text-stone-600">代（担当する・した本番の年）</span>
-            <select value={generation} onChange={(e) => setGeneration(Number(e.target.value))} className="block rounded-lg border border-stone-300 px-3 py-2">
+            <span className="text-sm text-ink-soft">代（担当する・した本番の年）</span>
+            <select value={generation} onChange={(e) => setGeneration(Number(e.target.value))} className="field block w-auto">
               {generationOptions.map((g) => (
                 <option key={g} value={g}>
                   {g}年度の代（{g}年の本番）
@@ -122,14 +127,15 @@ export default function RegisterPage() {
             </select>
           </label>
           <div className="space-y-1">
-            <span className="text-sm text-stone-600">部門</span>
+            <span className="text-sm text-ink-soft">部門</span>
             <div className="flex flex-wrap gap-2">
               {PROFILE_DEPARTMENTS.map((d) => (
                 <button
                   type="button"
                   key={d}
                   onClick={() => setDepartment(d)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium ${department === d ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-700 hover:bg-stone-200"}`}
+                  aria-pressed={department === d}
+                  className={`rounded-[4px] border px-4 py-1 text-sm ${department === d ? "border-ink bg-ink font-bold text-sheet" : "border-rule text-ink-soft hover:border-pencil"}`}
                 >
                   {d}
                 </button>
@@ -137,24 +143,24 @@ export default function RegisterPage() {
             </div>
           </div>
           <label className="block space-y-1">
-            <span className="text-sm text-stone-600">名前（知識カードの確認や先輩の回答に残ります）</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} maxLength={40} placeholder="例: 西田" className="block w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <span className="text-sm text-ink-soft">名前（知識カードの確認や先輩の回答に残ります）</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} maxLength={40} placeholder="例: 西田" className="field block" />
           </label>
         </section>
       )}
 
       {role === "current" && (
-        <section className="space-y-2 rounded-xl border border-stone-200 bg-white p-4">
-          <h2 className="text-sm font-bold text-stone-700">3. 今年の本番の日</h2>
+        <section className="page space-y-3 p-6">
+          <h2 className="font-bold">3. 今年の本番の日</h2>
           {existing === undefined ? (
-            <Spinner label="確かめています…" />
+            <Spinner label="確かめています" />
           ) : existing ? (
             <p className="text-sm">
               {generation}年度の本番は <span className="font-bold">{formatFestival(existing.festivalDate)}</span> です（{existing.registeredBy}が登録）。
             </p>
           ) : (
             <>
-              <p className="text-sm text-stone-600">
+              <p className="text-sm text-ink-soft">
                 {generation}年度の代で最初の登録です。本番の初日を入れると、前の代までの知識カードから今年の年間計画を作ります。
               </p>
               <input
@@ -163,18 +169,18 @@ export default function RegisterPage() {
                 min={`${generation}-01-01`}
                 max={`${generation}-12-31`}
                 onChange={(e) => setFestivalDate(e.target.value)}
-                className="rounded-lg border border-stone-300 px-3 py-2"
+                className="field w-auto"
               />
             </>
           )}
         </section>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button disabled={!ready || saving} className="w-full rounded-lg bg-stone-900 py-3 font-bold text-white disabled:opacity-40">
-        {saving ? "登録しています…" : "はじめる"}
+      {error && <p className="text-sm text-pen">{error}</p>}
+      <button disabled={!ready || saving} className="btn btn-ink w-full py-3 text-base">
+        {saving ? "登録しています" : "登録してはじめる"}
       </button>
-      <p className="text-center text-xs text-stone-400">登録はこのブラウザに残ります。右上のメニューから登録し直せます。</p>
+      <p className="text-center text-xs text-pencil">登録はこのブラウザに残ります。右上のメニューから登録し直せます。</p>
     </form>
   );
 }

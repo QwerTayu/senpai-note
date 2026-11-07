@@ -2,6 +2,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ROLE_LABEL } from "@/lib/types";
+import { Icon } from "./Icon";
 import { startTour } from "./Tour";
 import { useProfile } from "./useProfile";
 
@@ -23,30 +24,30 @@ export function ProfileMenu() {
   if (pathname === "/login" || pathname === "/register" || !profile) return null;
 
   return (
-    <div ref={ref} className="relative flex items-center gap-2">
-      <button onClick={startTour} className="rounded-full border border-stone-300 px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100">
-        ？ 使い方
+    <div ref={ref} className="relative flex items-center gap-4">
+      <button onClick={startTour} className="btn-text">
+        <Icon name="help" />
+        使い方
       </button>
       <button
         data-tour="profile-menu"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-full bg-stone-100 px-3 py-1.5 text-sm hover:bg-stone-200"
+        aria-expanded={open}
+        className="flex items-center gap-2 rounded-[4px] border border-rule px-3 py-1 text-sm hover:border-pencil"
       >
-        <span className={`rounded-full px-2 py-0.5 text-xs font-bold text-white ${profile.role === "current" ? "bg-sky-600" : "bg-amber-600"}`}>
-          {ROLE_LABEL[profile.role]}
-        </span>
-        <span className="font-medium">{profile.name}</span>
-        <span className="hidden text-stone-500 sm:inline">
+        <span className={`tag ${profile.role === "current" ? "tag-ink" : "tag-pen"}`}>{ROLE_LABEL[profile.role]}</span>
+        <span className="font-bold">{profile.name}</span>
+        <span className="hidden text-pencil sm:inline">
           {profile.generation}年度・{profile.department}
         </span>
-        <span className="text-stone-400">▾</span>
+        <Icon name="expand" className="text-pencil" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-xl border border-stone-200 bg-white text-sm shadow-lg">
-          <div className="border-b border-stone-100 px-4 py-3 text-xs text-stone-500">
-            {ROLE_LABEL[profile.role]}・{profile.generation}年度の代・{profile.department}
+        <div className="page absolute right-0 top-full z-40 mt-2 w-64 overflow-hidden text-sm shadow-[0_8px_24px_rgba(29,43,68,0.12)]">
+          <div className="border-b border-rule px-4 py-3 text-xs text-pencil">
+            {ROLE_LABEL[profile.role]}、{profile.generation}年度の代、{profile.department}
           </div>
-          <a href="/register" className="block px-4 py-2.5 hover:bg-stone-50">
+          <a href="/register" className="block px-4 py-3 hover:bg-paper">
             登録し直す（役・代・部門を変える）
           </a>
         </div>
