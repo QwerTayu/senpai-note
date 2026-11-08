@@ -1,4 +1,6 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
+import { Markdown } from "./Markdown";
 import { CARD_KIND_LABEL, SOURCE_KIND_LABEL, type Card, type Source } from "@/lib/types";
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -88,8 +90,35 @@ export function SourceView({ source }: { source: Source }) {
         <span>{source.author}</span>
         <span>{formatDate(source.postedAt)}</span>
       </div>
-      <p className="line-clamp-6 whitespace-pre-wrap">{source.body}</p>
+      <SourceBody source={source} />
     </div>
+  );
+}
+
+// Drive・Notion の資料はマークダウンで書かれているので解釈して出す。長い本文は途中までにし、続きを開けるようにする
+function SourceBody({ source }: { source: Source }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [overflows, setOverflows] = useState(false);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (el) setOverflows(el.scrollHeight > el.clientHeight + 1);
+  }, [source.body]);
+  const isDoc = source.kind === "drive" || source.kind === "notion";
+  return (
+    <>
+      <div
+        ref={ref}
+        className={open ? "" : `max-h-40 overflow-hidden ${overflows ? "[mask-image:linear-gradient(to_bottom,black_70%,transparent)]" : ""}`}
+      >
+        {isDoc ? <Markdown>{source.body}</Markdown> : <p className="whitespace-pre-wrap">{source.body}</p>}
+      </div>
+      {overflows && (
+        <button type="button" onClick={() => setOpen(!open)} className="btn-text mt-1 text-xs">
+          {open ? "たたむ" : "続きを読む"}
+        </button>
+      )}
+    </>
   );
 }
 
