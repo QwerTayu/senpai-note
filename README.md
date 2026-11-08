@@ -7,6 +7,7 @@
 
 Built with Claude: Japan 2026（テーマ1「あなたにしかない深さを。」）の応募作品です。
 
+- デモ動画（3分）: https://youtu.be/X2Sa98rsY2s
 - デモ: https://senpai-note.vercel.app （合言葉が必要です）
 - データはすべて架空の「若葉祭実行委員会 総務局」です（Slack 68件・Drive 5件・Notion 3件）
 
