@@ -1,3 +1,5 @@
+<p align="center"><img src="src/app/icon.svg" width="96" height="96" alt="senpai-note のアイコン"></p>
+
 # senpai-note
 
 **毎年メンバーが入れ替わる組織のための「1代上の先輩」ノート。**
@@ -10,6 +12,8 @@ Built with Claude: Japan 2026（テーマ1「あなたにしかない深さを�
 - デモ動画（3分）: https://youtu.be/X2Sa98rsY2s
 - デモ: https://senpai-note.vercel.app （合言葉が必要です）
 - データはすべて架空の「若葉祭実行委員会 総務局」です（Slack 68件・Drive 5件・Notion 3件）
+
+[![デモ動画（3分）を YouTube で見る](docs/demo-thumbnail.jpg)](https://youtu.be/X2Sa98rsY2s)
 
 ## 概要
 
