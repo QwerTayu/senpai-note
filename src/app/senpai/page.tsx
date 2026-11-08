@@ -77,7 +77,7 @@ export default function SenpaiPage() {
 
   return (
     <div className="space-y-8">
-      <section className="flex flex-wrap items-end justify-between gap-6">
+      <section className="grid items-end gap-6 sm:grid-cols-[minmax(0,1fr)_auto]">
         <div className="space-y-1">
           <p className="text-sm text-pencil">{profile ? `${profile.generation}年度の代` : "前の代"}の先輩の画面</p>
           <h1 className="text-2xl font-bold leading-snug">確かめて、一言答えるだけ</h1>
@@ -85,12 +85,16 @@ export default function SenpaiPage() {
             ふだんのやりとりから、エージェントが知識を1つずつ「知識カード」にまとめます。正しければ確認済みにし、違えばエージェントと話して直します。現役の代の計画に付いた提案と、記録にない質問も、ここに届きます。
           </p>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex flex-col items-start gap-2 sm:items-end">
           <button data-tour="ingest" onClick={ingest} disabled={ingesting} className="btn btn-ink">
             <Icon name="ingest" />
             新しいやりとりを取り込む
           </button>
-          {ingesting ? <Spinner label="Slack・Drive・Notion を読んで知識カードを作っています" /> : ingestMessage && <p className="text-sm text-ink-soft">{ingestMessage}</p>}
+          {ingesting ? (
+            <Spinner label="Slack・Drive・Notion を読んで知識カードを作っています" />
+          ) : (
+            ingestMessage && <p className="max-w-[22em] text-sm text-ink-soft sm:text-right">{ingestMessage}</p>
+          )}
         </div>
       </section>
 
